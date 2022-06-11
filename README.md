@@ -3,7 +3,7 @@
 
 The UAIS is planning to host a hex bot tournament. We're planning a series of
 workshops to get your team ready to win. Dates are broadly undecided and will be
-announced sometime mid October. The tournmanet itself will likely take place at
+announced sometime mid October. The tournament itself will likely take place at
 the end of fall semester or right at the beginning of winter 2023
 
 This repository contains a reference implementation for a very basic random
