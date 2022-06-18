@@ -11,7 +11,8 @@ guess bot, the central communicating program, and defines the [communication
 protocol](#Communication-protocol). Bots must adhere to this protocol **exactly**, 
 lest an inconsistent state between opponents arise. To ensure that adherence is ensured,
 a test script in "Test/" has been provided which takes the name of your program as an argument.
-The script ensures that 
+
+The Bot infrastructure has been written in Rust because F A S T and also F A S T.
 
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
 for bots to play. It consists of two players, we'll denote them red and blue,
