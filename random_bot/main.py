@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-
 """
-This is an exampel of a script used to interact with the Hex bot.
+This is an example of a script used to interact with the Hex bot.
 """
-
+import sys
 from bot import RandomHexBot
-
 
 def main():
     bot = RandomHexBot()
 
-    cmd = getcmd()
-    while cmd != "quit":
+    msg = get_msg()
+    while msg != "quit":
         respond()
 
 

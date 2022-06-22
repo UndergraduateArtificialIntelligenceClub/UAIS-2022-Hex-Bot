@@ -1,6 +1,9 @@
 // This program is written with unix in mind. No clue what'll happen on windows...
+mod board;
+
 use std::process::{self, Command, Stdio};
 use std::io::{self, BufRead, Read, Write};
+use board::{Board, Tile};
 
 fn main()
 {
@@ -24,8 +27,22 @@ fn main()
             println!("Shutdown NOW!");
             process::exit(0);
         } else if "run" == line || "r" == line {
-            play_round(&bot_1, &bot_2)
-                .expect("Something went wrong");
+            let mut board = Board::new(4, 4);
+
+            // TODO: Remove. This is to demo the display capabilities
+            board.set(0,0, Tile::Red);
+            board.set(1,1, Tile::Red);
+            board.set(2,2, Tile::Red);
+            board.set(3,3, Tile::Red);
+
+            board.set(3,0, Tile::Blue);
+            board.set(3,2, Tile::Blue);
+            board.set(1,2, Tile::Blue);
+
+            println!("{}", board);
+
+            //play_round(&bot_1, &bot_2)
+            //    .expect("Something went wrong");
         } else {
             println!("Unsupported command: `{}`", line);
         }
