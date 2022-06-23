@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-from typing import List
-
 """
-This is an exampel of a script used to interact with the Hex bot.
+This is an example of a script used to interact with the Hex bot.
 """
-
+import sys
 from bot import RandomHexBot
-
 
 def main():
     bot = RandomHexBot()
 
-    cmd = getcmd()
+    cmd = get_cmd()
     while cmd[0] != "quit":
         if cmd[0] == "init_board":
             bot.init_board(cmd)
@@ -36,7 +33,7 @@ def respond(message=""):
     print("= " + message)
 
 
-def getcmd() -> List[str]:
+def get_cmd():
     line = input()
     while not line:
         line = input()

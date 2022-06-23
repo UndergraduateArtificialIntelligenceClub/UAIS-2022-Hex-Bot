@@ -8,11 +8,12 @@ the end of fall semester or right at the beginning of winter 2023
 
 This repository contains a reference implementation for a very basic random
 guess bot, the central communicating program, and defines the [communication
-protocol](#Communication-protocol). Bots must adhere to this protocol **exactly**, 
+protocol](#Communication-protocol). Bots must adhere to this protocol **exactly**,
 lest an inconsistent state between opponents arise. To ensure that adherence is ensured,
 a test script in "Test/" has been provided which takes the name of your program as an argument.
 
-The Bot infrastructure has been written in Rust because F A S T and also F A S T.
+The Bot infrastructure is 🚀__**blazing fast**__⚡, since it's been written in
+fearlessly concurrent and zero-cost abstracted ✨Rust✨.
 
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
 for bots to play. It consists of two players, we'll denote them red and blue,
