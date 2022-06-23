@@ -12,7 +12,7 @@ protocol](#Communication-protocol). Bots must adhere to this protocol **exactly*
 lest an inconsistent state between opponents arise. To ensure that adherence is ensured,
 a test script in "Test/" has been provided which takes the name of your program as an argument.
 
-The Bot infrastructure is 🚀__**blazing fast**__⚡, since it's been written in
+The Bot infrastructure is 🚀<u>**blazing fast**</u>⚡, since it's been written in
 fearlessly concurrent and zero-cost abstracted ✨Rust✨.
 
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
