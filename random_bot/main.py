@@ -25,11 +25,14 @@ def respond(message=""):
 
 
 def get_cmd():
-    line = input()
+    line = ""
     while not line:
-        line = input()
+        try:
+            line = input()
+        except EOFError:
+            return ["quit"]
 
-    return line.split(" ")
+    return line.strip().split(" ")
 
 
 if __name__ == "__main__":

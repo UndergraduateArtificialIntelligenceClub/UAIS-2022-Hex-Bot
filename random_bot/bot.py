@@ -1,7 +1,7 @@
 from multiprocessing.sharedctypes import Value
 from constants import BORDER, WHITE, BLACK, EMPTY
-from random import choice
-
+from random import choice, seed
+seed(42)  # Get same results temporarily
 
 class RandomHexBot:
     def __init__(self, color, board_size=8):
@@ -70,10 +70,10 @@ class RandomHexBot:
         self.offsets = [
             -1,
             1,
+            -self.board_size,
             -self.board_size - 1,
-            -self.board_size - 2,
+            self.board_size,
             self.board_size + 1,
-            self.board_size + 2,
         ]
 
         self.board.append(BORDER)
@@ -108,7 +108,7 @@ class RandomHexBot:
     def make_move(self):
         """Generates the move. For this bot, the move is randomly selected from all empty positions."""
         empties = []
-        for i, cell in self.board:
+        for i, cell in enumerate(self.board):
             if cell == EMPTY:
                 empties.append(i)
 
@@ -169,57 +169,48 @@ class RandomHexBot:
             are mathematically impossible in Hex.
         """
         seen = set()
-        top_left = False
-        bottom_right = False
 
-        def dfs(i, color):
-            """Oopsie poopsie! I made a fucky wucky! This code is too slow! UwU
+        def dfs(i, color, level=0):
+            """Oopsie poopsie! I made a fucky wucky! This code is super-duper slow! UwU
 
             Args:
                 i (int): The current location of the depth-first search
                 color (int): The current color of the dfs.
             """
-            if color == WHITE:
-                if (i - 1) % self.board_size == 0:
-                    top_left = True  # Touching left side of board
-                if (i + 1) % self.board_size == 0:
-                    bottom_right = True  # Touching right of board
-            else:
-                if i <= self.board_size:
-                    top_left = True  # Touching top of board
-                if i >= (self.board_size) * (self.board_size + 1):
-                    bottom_right = True  # Touching bottom of board
+            if color == WHITE and (i - self.board_size) % (self.board_size + 1) == 0:
+                return True  # Touching right of board
+            elif color == BLACK and i >= (self.board_size) * (self.board_size + 1):
+                return True  # Touching bottom of board
 
-            # 'Base case' of dfs
-            if top_left and bottom_right:
-                return True
-
+            # Label hexagon as 'visited' so we don't get infinite recusion
             seen.add(i)
             for offset in self.offsets:
                 new_coord = i + offset
                 if (
-                    i not in seen
-                    and 0 <= i < len(self.board)
-                    and self.board[i] == color
-                    and dfs(new_coord, color)
+                    new_coord not in seen
+                    and 0 <= new_coord < len(self.board)
+                    and self.board[new_coord] == color
+                    and dfs(new_coord, color, level=level + 1)
                 ):
                     return True
 
+            # Remove hexagon so we can examine it again next time (hint:is this needed?)
             seen.remove(i)
             return False
 
-        # Iterate over all spaces, performing dfs on empty
+        # Iterate over all starting spaces for black & white, performing dfs on empty
         # spaces (hint: this leads to repeated computation!)
-        for i, cell in enumerate(self.board):
-            top_left = False
-            bottom_right = False
-            seen = set()
-
-            if cell in [WHITE, BLACK] and dfs(i, cell):
-                print(1 if cell == self.color else -1)
+        for i in range(1, self.board_size+1):
+            if self.board[i] == BLACK and dfs(i, BLACK):
+                print("BLACK")
                 return
 
-        print(0)  # No winner yet!
+        for i in range(1, len(self.board), self.board_size+1):
+            if self.board[i] == WHITE and dfs(i, WHITE):
+                print("WHITE")
+                return
+
+        print("NA")
         return
 
     def init_neighbours(self):
