@@ -204,15 +204,15 @@ class RandomHexBot:
         # spaces (hint: this leads to repeated computation!)
         for i in range(1, self.board_size + 1):
             if self.board[i] == BLACK and dfs(i, BLACK):
-                print("BLACK")
+                print(1 if self.color == BLACK else -1)
                 return
 
         for i in range(1, len(self.board), self.board_size + 1):
             if self.board[i] == WHITE and dfs(i, WHITE):
-                print("WHITE")
+                print(1 if self.color == WHITE else -1)
                 return
 
-        print("NA")
+        print(0)
         return
 
     def init_neighbours(self):
