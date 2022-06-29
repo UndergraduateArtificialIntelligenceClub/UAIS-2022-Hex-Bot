@@ -1,7 +1,9 @@
 from multiprocessing.sharedctypes import Value
 from constants import BORDER, WHITE, BLACK, EMPTY
 from random import choice, seed
+
 seed(42)  # Get same results temporarily
+
 
 class RandomHexBot:
     def __init__(self, color, board_size=8):
@@ -200,12 +202,12 @@ class RandomHexBot:
 
         # Iterate over all starting spaces for black & white, performing dfs on empty
         # spaces (hint: this leads to repeated computation!)
-        for i in range(1, self.board_size+1):
+        for i in range(1, self.board_size + 1):
             if self.board[i] == BLACK and dfs(i, BLACK):
                 print("BLACK")
                 return
 
-        for i in range(1, len(self.board), self.board_size+1):
+        for i in range(1, len(self.board), self.board_size + 1):
             if self.board[i] == WHITE and dfs(i, WHITE):
                 print("WHITE")
                 return
