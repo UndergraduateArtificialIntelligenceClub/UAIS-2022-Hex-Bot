@@ -4,44 +4,31 @@ This is an example of a script used to interact with the Hex bot.
 """
 import sys
 from bot import RandomHexBot
+from constants import WHITE
 
 def main():
-    bot = RandomHexBot()
+    bot = RandomHexBot(WHITE)
 
     cmd = get_cmd()
     while cmd[0] != "quit":
-        if cmd[0] == "init_board":
-            bot.init_board(cmd)
-        elif cmd[0] == "show_board":
-            bot.show_board()
-        elif cmd[0] == "make_move":
-            bot.make_move()
-        elif cmd[0] == "seto":
-            bot.seto(cmd)
-        elif cmd[0] == "sety":
-            bot.sety(cmd)
-        elif cmd[0] == "unset":
-            bot.unset(cmd)
-        elif cmd[0] == "check_win":
-            bot.check_win()
-        else:
+        if not bot.is_runnable(cmd):
             print("Cmd not recognized. Please refer to known commands.")
-        respond()
+        else:
+            bot.run_command(cmd)
+            respond()
+        cmd = get_cmd()
 
 
 def respond(message=""):
-    print("= " + message)
+    print("= " + message + "\n")
 
 
 def get_cmd():
     line = input()
     while not line:
         line = input()
-    cmds = line.split(" ")
-    if len(cmds) == 1:
-        return cmds[0]
 
-    return cmds
+    return line.split(" ")
 
 
 if __name__ == "__main__":

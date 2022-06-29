@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from constants import BORDER, WHITE, BLACK, EMPTY
 from random import choice
 
@@ -8,6 +9,55 @@ class RandomHexBot:
         self.opp = BLACK if color == WHITE else WHITE
         self.init_board(board_size)
         self.init_neighbours()
+
+        self.pub = {
+            "init_board": self.init_board,
+            "show_board": self.show_board,
+            "make_move": self.make_move,
+            "seto": self.seto,
+            "sety": self.sety,
+            "unset": self.unset,
+            "check_win": self.check_win,
+        }
+
+        self.argnums = {
+            "init_board": 0,
+            "show_board": 0,
+            "make_move": 0,
+            "seto": 1,
+            "sety": 1,
+            "unset": 1,
+            "check_win": 0,
+        }
+
+    def is_runnable(self, cmd):
+        """Checks to see whether the command in 'cmd' conforms to the expected format
+
+        Args:
+            cmd (List[str]): A space-separated list of the commands given on the command line
+
+        Returns:
+            bool: True if the command exists and has the correct # of arguments, False otherwise
+        """
+        assert len(cmd)
+        if cmd[0] not in self.pub:
+            return False
+        if len(cmd) - 1 != self.argnums[cmd[0]]:
+            return False
+
+        return True
+
+    def run_command(self, cmd):
+        """Executes the command contained within 'cmd' if it is applicable
+
+        Args:
+            cmd (List[str]): A space-separated list of the commands given on the command line
+        """
+        if len(cmd) > 1:
+            self.pub[cmd[0]](cmd[1])
+        else:
+            self.pub[cmd[0]]()
+
 
     def init_board(self, board_size):
         """Tells the bot to reset the game to an empty board with a specified side length
@@ -38,20 +88,24 @@ class RandomHexBot:
     def show_board(self):
         """Prints the board to stdout. This is primarily used for
         testing purposes & when playing against a human opponent
-        """
-        for i, cell in enumerate(self.board):
-            if cell == BORDER:
-                print("\n" + " " * (i / self.board_size))  # Padding subsequent rows
-            else:
-                print("{} ".format(cell))
 
-        return
+        Returns:
+            bool: True if the command exists and ran successfully, False otherwise
+        """
+        for i, cell in enumerate(self.board[:-1]):
+            if cell == BORDER:
+                print("\n" + " " * (i // self.board_size), end="")  # Padding subsequent rows
+            elif cell == WHITE:
+                print("W ", end="")
+            elif cell == BLACK:
+                print("B ", end="")
+            else:
+                print(". ", end="")
+        print()
+        return True
 
     def make_move(self):
         """Generates the move. For this bot, the move is randomly selected from all empty positions.
-
-        Returns:
-            str: The move chosen to play by the bot
         """
         empties = []
         for i, cell in self.board:
@@ -59,8 +113,9 @@ class RandomHexBot:
                 empties.append(i)
 
         move = self.coord_to_move(choice(empties))
+        print(move)
         self.sety(move)
-        return move
+        return
 
     def seto(self, move):
         """Tells the bot about a move for the other bot
@@ -68,25 +123,30 @@ class RandomHexBot:
         Args:
             move (str): A human-readable position on which the opponent has just played
 
-        Returns:
-            bool: True if the move successfully been played internally, False otherwise
+        Raises:
+            IndexError: When the move played is for an occupied square
         """
         
         coord = self.move_to_coord(move)
+        if self.board[coord] != EMPTY:
+            raise IndexError("Trying to play on a non-empty square!")
         self.board[coord] = self.opp
-        return True
+        return
 
     def sety(self, move):
         """Tells the bot to play a move for itself
 
         Args:
             move (str): A human-readable position on the board
-        Returns:
-            bool: True if the move is possible (and has been made), False otherwise
+
+        Raises:
+            IndexError: When the move played is for an occupied square
         """
         coord = self.move_to_coord(move)
+        if self.board[coord] != EMPTY:
+            raise IndexError("Trying to play on a non-empty square!")
         self.board[coord] = self.color
-        return True
+        return
 
     def unset(self, move):
         """Tells the bot to set a tile as unused
@@ -96,6 +156,9 @@ class RandomHexBot:
         Returns:
             bool: True if the move has been unmade, False otherwise
         """
+
+        coord = self.move_to_coord(move)
+        self.board[coord] = EMPTY
         return True
 
     def check_win(self):
@@ -109,15 +172,12 @@ class RandomHexBot:
         top_left = False
         bottom_right = False
 
-        def dfs(self, i, color):
+        def dfs(i, color):
             """Oopsie poopsie! I made a fucky wucky! This code is too slow! UwU
 
             Args:
                 i (int): The current location of the depth-first search
                 color (int): The current color of the dfs.
-
-            Returns:
-                bool: Whether or not the current dfs found a winner or not
             """
             if color == WHITE:
                 if (i - 1) % self.board_size == 0:
@@ -156,9 +216,11 @@ class RandomHexBot:
             seen = set()
 
             if cell in [WHITE, BLACK] and dfs(i, cell):
-                return 1 if cell == self.color else -1
+                print(1 if cell == self.color else -1)
+                return
 
-        return 0  # No winner yet!
+        print(0)  # No winner yet!
+        return
 
     def init_neighbours(self):
         """Precalculates all neighbours for each cell"""
