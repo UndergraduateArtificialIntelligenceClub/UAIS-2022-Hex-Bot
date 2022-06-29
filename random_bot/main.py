@@ -6,6 +6,7 @@ import sys
 from bot import RandomHexBot
 from constants import WHITE
 
+
 def main():
     bot = RandomHexBot(WHITE)
 

@@ -7,6 +7,7 @@ If you copy-paste these tests to a bot you wrote, there is a high likelihood tha
 TL;DR Write your own tests!
 """
 
+
 class BotUnitTest(unittest.TestCase):
     def test_coord_to_move(self):
         board_size = 8
@@ -41,7 +42,8 @@ class BotUnitTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             bot.move_to_coord("a9")
         with self.assertRaises(AssertionError):
-            bot.move_to_coord("i1")        
+            bot.move_to_coord("i1")
+
 
 # class BotIntegrationTest(unittest.TestCase):
 

@@ -58,7 +58,6 @@ class RandomHexBot:
         else:
             self.pub[cmd[0]]()
 
-
     def init_board(self, board_size):
         """Tells the bot to reset the game to an empty board with a specified side length
 
@@ -94,7 +93,9 @@ class RandomHexBot:
         """
         for i, cell in enumerate(self.board[:-1]):
             if cell == BORDER:
-                print("\n" + " " * (i // self.board_size), end="")  # Padding subsequent rows
+                print(
+                    "\n" + " " * (i // self.board_size), end=""
+                )  # Padding subsequent rows
             elif cell == WHITE:
                 print("W ", end="")
             elif cell == BLACK:
@@ -105,8 +106,7 @@ class RandomHexBot:
         return True
 
     def make_move(self):
-        """Generates the move. For this bot, the move is randomly selected from all empty positions.
-        """
+        """Generates the move. For this bot, the move is randomly selected from all empty positions."""
         empties = []
         for i, cell in self.board:
             if cell == EMPTY:
@@ -126,7 +126,7 @@ class RandomHexBot:
         Raises:
             IndexError: When the move played is for an occupied square
         """
-        
+
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
             raise IndexError("Trying to play on a non-empty square!")
@@ -249,9 +249,9 @@ class RandomHexBot:
         """
         assert coord, "Coord must be non-zero"
         coord -= 1  # Ignores border at start of board
-        letter = ord('a') + coord // (self.board_size + 1)
+        letter = ord("a") + coord // (self.board_size + 1)
         number = coord % (self.board_size + 1) + 1
-        
+
         return chr(letter) + str(number)
 
     def move_to_coord(self, move):
@@ -264,15 +264,23 @@ class RandomHexBot:
             int: The integer coordinate of 'move', used to interact with the board
         """
         assert len(move), "Move must be a non-empty string!"
-        assert move[0].isalpha(), "The first character of move must be an alphanumeric character!"
-        assert ord(move[0]) - ord('a') < self.board_size, "The letter in 'move' must have value less than board size!"
-        assert move[1:].isdigit(), "All characters other than the first must be numeric in move!"
-        assert 0 < int(move[1:]) <= self.board_size, "Integer part of move must be within range (0, board_size]!"
+        assert move[
+            0
+        ].isalpha(), "The first character of move must be an alphanumeric character!"
+        assert (
+            ord(move[0]) - ord("a") < self.board_size
+        ), "The letter in 'move' must have value less than board size!"
+        assert move[
+            1:
+        ].isdigit(), "All characters other than the first must be numeric in move!"
+        assert (
+            0 < int(move[1:]) <= self.board_size
+        ), "Integer part of move must be within range (0, board_size]!"
 
         coord = 1  # Ignores first border in self.board
-        for _ in range(ord('a'), ord(move[0])):
+        for _ in range(ord("a"), ord(move[0])):
             coord += self.board_size + 1
-        
+
         offset = int(move[1:]) - 1
         coord += offset
         return coord
