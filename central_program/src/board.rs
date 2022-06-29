@@ -200,8 +200,8 @@ mod board_testing {
         {
             let r = 2; let c = 2;
 
-            let mut adjs = board.get_adj(r, c);
-            let mut expected = vec![7, 8, 11, 13, 16, 17];
+            let adjs = board.get_adj(r, c);
+            let expected = vec![7, 8, 11, 13, 16, 17];
 
             assert_eq!(adjs.iter().sum::<usize>(), expected.iter().sum::<usize>());
         }
