@@ -1,6 +1,5 @@
-
-use std::process::{Command, Stdio, Child};
-use std::io::{self, BufRead, Write, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
+use std::process::{Child, Command, Stdio};
 
 fn get_bot(_board_size: i32) -> io::Result<Child> {
     let bot_1 = Command::new("python")
@@ -9,7 +8,6 @@ fn get_bot(_board_size: i32) -> io::Result<Child> {
         .stdout(Stdio::piped())
         .spawn()?;
 
-    println!("here 1");
     Ok(bot_1)
 }
 
@@ -29,7 +27,8 @@ fn get_command_output(bot: &mut Child, cmds_to_skip: i32) -> String {
         let bytes_read = reader.read_line(&mut output).unwrap();
 
         while bytes_read > 0 && !output.contains("=") {
-            reader.read_line(&mut output)
+            reader
+                .read_line(&mut output)
                 .expect("Could not read line from stdout");
         }
     }
@@ -40,13 +39,14 @@ fn get_command_output(bot: &mut Child, cmds_to_skip: i32) -> String {
 #[test]
 fn test_empty_show_board() -> io::Result<()> {
     let mut bot = get_bot(8)?;
-    
+
     let bot_in = bot.stdin.as_mut().unwrap();
     write!(bot_in, "show_board\n")?;
     let output = get_command_output(&mut bot, 0);
 
-    assert_eq!(output, "
-. . . . . . . . 
+    assert_eq!(
+        output.as_str().trim_start(),
+        ". . . . . . . . 
  . . . . . . . . 
   . . . . . . . . 
    . . . . . . . . 
@@ -55,8 +55,62 @@ fn test_empty_show_board() -> io::Result<()> {
       . . . . . . . . 
        . . . . . . . . 
 = 
-");
+"
+    );
 
     shutdown_bot(&mut bot)?;
     Ok(())
 }
+
+#[test]
+fn test_play_a1() -> io::Result<()> {
+    let mut bot = get_bot(8)?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety a1\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        "W . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+// test sety
+// test different locations
+// test playing on own spot
+// test playing on opponents spot
+// test 'swap'
+
+// test seto
+// test different locations
+// test playing on own spot
+// test playing on opponents spot
+// test 'swap'
+
+// test basic win conditions
+// test different draw conditions
+// test different win conditions
+// test different loss conditions
+
+// test unset
+// test clearing
+// test that other cells are unaffected
+// test clearing empty cell
+
+// test init_board
+// test board is cleared
+// test board size changes
