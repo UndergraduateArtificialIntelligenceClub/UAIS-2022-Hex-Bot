@@ -90,3 +90,6 @@ A bot may respond with `error` when the requested operation conflicts with its
 internal logic. For example, if a1 is set to your tile and the bot receives
 `seto a1`. It is not necessary to implement this, you could just overwrite a1,
 though it may help catch errors faster if the bots become desynchronized
+
+# Database
+http://hex.kosmanor.com/hex-bin/board/10/en_US:0/
