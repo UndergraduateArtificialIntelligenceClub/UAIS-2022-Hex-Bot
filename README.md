@@ -8,12 +8,13 @@ the end of fall semester or right at the beginning of winter 2023
 
 This repository contains a reference implementation for a very basic random
 guess bot, the central communicating program, and defines the [communication
-protocol](#Communication-protocol). Bots must adhere to this protocol **exactly**,
-lest an inconsistent state between opponents arise. To ensure that adherence is ensured,
-a test script in "Test/" has been provided which takes the name of your program as an argument.
+protocol](#Communication-protocol). Bots must adhere to this protocol
+**exactly**, lest an inconsistent state between opponents arise. To ensure that
+adherence is ensured, a test script in "Test/" has been provided which takes the
+name of your program as an argument.
 
-The Bot infrastructure is 🚀<u>**blazing fast**</u>⚡, since it's been written in
-fearlessly concurrent and zero-cost abstracted ✨Rust✨.
+The Bot infrastructure is 🚀<u>**blazing fast**</u>⚡, since it's been written
+in fearlessly concurrent and zero-cost abstracted ✨Rust✨.
 
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
 for bots to play. It consists of two players, we'll denote them red and blue,
@@ -53,7 +54,7 @@ immediate loss, so don't try to cheat
 | `seto {}` | `seto a1` | Tells the bot about a move for the other bot |
 | `sety {}` | `sety a1` | Tells the bot to play a move for itself |
 | `unset {}` | `unset a1` | Tells the bot to set a tile as unused |
-| `check_win` | `check_win` | Tells the bot to check if the game is over. Returns `1` if itself has won, `-1` if the opponent has won, `0` if the game has not terminated |
+| `check_win` | `check_win` | Tells the bot to check if the game is over. Returns `1` if itself has won, `-1` if the opponent has won, `0` if the game has not terminated. Note that draws are mathematically impossible in Hex. |
 | `quit` | `quit` | The game is over |
 
 Example message sequence:
@@ -67,10 +68,13 @@ make_move
 quit
 ```
 
-In addition to all responses specified below, all messages sent to stdout by your bot **must**
-end with a single "=" on its own line. This signifies that all data has been transmitted and the central
-coordinator can transfer the data to the opponent. A message that does not terminate with "=" within a certain
-timespan will be used to denote an error having occurred, at which point the opponent will be declared the winner.
+**This section is undergoing reconsideration!!!**. In addition to all responses
+specified below, all messages sent to stdout by your bot **must** end with a
+single "=" on its own line. This signifies that all data has been transmitted
+and the central coordinator can transfer the data to the opponent. A message
+that does not terminate with "=" within a certain timespan will be used to
+denote an error having occurred, at which point the opponent will be declared
+the winner.
 
 | Message from central program | Response required from bot | Example | Internal state |
 | ---------------------------- | -------------------------- | ------- | -------------- |
@@ -89,3 +93,5 @@ A bot may respond with `error` when the requested operation conflicts with its
 internal logic. For example, if a1 is set to your tile and the bot receives
 `seto a1`. It is not necessary to implement this, you could just overwrite a1,
 though it may help catch errors faster if the bots become desynchronized
+
+[Database](http://hex.kosmanor.com/hex-bin/board/10/en_US:0/)
