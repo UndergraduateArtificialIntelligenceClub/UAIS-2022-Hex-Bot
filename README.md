@@ -53,8 +53,7 @@ immediate loss, so don't try to cheat
 | `seto {}` | `seto a1` | Tells the bot about a move for the other bot |
 | `sety {}` | `sety a1` | Tells the bot to play a move for itself |
 | `unset {}` | `unset a1` | Tells the bot to set a tile as unused |
-| `check_win` | `check_win` | Tells the bot to check if the game is over. Returns `1` if itself has won, `-1` if the opponent has won,
-    `0` if the game has not terminated. Note that draws are mathematically impossible in Hex. |
+| `check_win` | `check_win` | Tells the bot to check if the game is over. Returns `1` if itself has won, `-1` if the opponent has won, `0` if the game has not terminated |
 | `quit` | `quit` | The game is over |
 
 Example message sequence:
