@@ -23,7 +23,7 @@ class RandomHexBot:
         }
 
         self.argnums = {
-            "init_board": 0,
+            "init_board": 1,
             "show_board": 0,
             "make_move": 0,
             "seto": 1,
@@ -66,7 +66,7 @@ class RandomHexBot:
         Args:
             board_size (int): The width & height of the game board to create
         """
-        self.board_size = board_size
+        self.board_size = int(board_size)
         self.board = []
 
         self.offsets = [
@@ -124,14 +124,12 @@ class RandomHexBot:
 
         Args:
             move (str): A human-readable position on which the opponent has just played
-
-        Raises:
-            IndexError: When the move played is for an occupied square
         """
 
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
-            raise IndexError("Trying to play on a non-empty square!")
+            print("Trying to play on a non-empty square!")
+            return
         self.board[coord] = self.opp
         return
 
@@ -140,13 +138,11 @@ class RandomHexBot:
 
         Args:
             move (str): A human-readable position on the board
-
-        Raises:
-            IndexError: When the move played is for an occupied square
         """
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
-            raise IndexError("Trying to play on a non-empty square!")
+            print("Trying to play on a non-empty square!")
+            return
         self.board[coord] = self.color
         return
 
