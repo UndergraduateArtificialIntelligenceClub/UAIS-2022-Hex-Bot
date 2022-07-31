@@ -65,6 +65,206 @@ fn test_empty_show_board() -> io::Result<()> {
 // test sety
 // test different locations
 #[test]
+fn test_sety_a1() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety a1\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        "W . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+#[test]
+fn test_sety_a8() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety a8\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        ". . . . . . . W 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+#[test]
+fn test_sety_h1() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety h1\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        ". . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       W . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+#[test]
+fn test_sety_h8() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety h8\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        ". . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . W 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+#[test]
+fn test_sety_mid() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety d3\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 1);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        ". . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . W . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+// test play on own spot
+#[test]
+fn test_sety_on_own_spot() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "sety a1\n")?;
+    write!(bot_in, "sety a1\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 2);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        "W . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+
+// test play on opponents spot
+#[test]
+fn test_sety_on_opponents_spot() -> io::Result<()> {
+    let mut bot = get_bot()?;
+
+    let bot_in = bot.stdin.as_mut().unwrap();
+    write!(bot_in, "seto a1\n")?;
+    write!(bot_in, "sety a1\n")?;
+    write!(bot_in, "show_board\n")?;
+    let output = get_command_output(&mut bot, 2);
+
+    assert_eq!(
+        output.as_str().trim_start(),
+        "B . . . . . . . 
+ . . . . . . . . 
+  . . . . . . . . 
+   . . . . . . . . 
+    . . . . . . . . 
+     . . . . . . . . 
+      . . . . . . . . 
+       . . . . . . . . 
+= 
+"
+    );
+
+    shutdown_bot(&mut bot)?;
+    Ok(())
+}
+// test 'swap'
+
+// test seto
+// test different locations
+// test playing on own spot
+// test playing on opponents spot
+// test 'swap'
+
+#[test]
 fn test_play_a1() -> io::Result<()> {
     let mut bot = get_bot()?;
 
@@ -256,12 +456,6 @@ fn test_play_on_opponents_spot() -> io::Result<()> {
     shutdown_bot(&mut bot)?;
     Ok(())
 }
-// test 'swap'
-
-// test seto
-// test different locations
-// test playing on own spot
-// test playing on opponents spot
 // test 'swap'
 
 // test basic win conditions
