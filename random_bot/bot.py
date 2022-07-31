@@ -8,6 +8,7 @@ seed(42)  # Get same results temporarily
 class RandomHexBot:
     def __init__(self, color, board_size=8):
         self.color = color
+        self.move_count = 0
         self.opp = BLACK if color == WHITE else WHITE
         self.init_board(board_size)
         self.init_neighbours()
@@ -68,6 +69,7 @@ class RandomHexBot:
         """
         self.board_size = int(board_size)
         self.board = []
+        self.move_count = 0
 
         self.offsets = [
             -1,
@@ -126,11 +128,18 @@ class RandomHexBot:
             move (str): A human-readable position on which the opponent has just played
         """
 
+        if move == "swap":
+            if self.move_count != 1:
+                print("'swap' can only occur on second move (opponents first move)!")
+            else:
+                self.color, self.opp = self.opp, self.color
+            return
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
             print("Trying to play on a non-empty square!")
             return
         self.board[coord] = self.opp
+        self.move_count += 1
         return
 
     def sety(self, move):
@@ -139,11 +148,18 @@ class RandomHexBot:
         Args:
             move (str): A human-readable position on the board
         """
+        if move == "swap":
+            if self.move_count != 1:
+                print("'swap' can only occur on second move (opponents first move)!")
+            else:
+                self.color, self.opp = self.opp, self.color
+            return
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
             print("Trying to play on a non-empty square!")
             return
         self.board[coord] = self.color
+        self.move_count += 1
         return
 
     def unset(self, move):
