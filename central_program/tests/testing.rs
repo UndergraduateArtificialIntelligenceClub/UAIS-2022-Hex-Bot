@@ -3,7 +3,7 @@ use std::process::{Child, Command, Stdio, ChildStdout};
 
 fn get_bot() -> io::Result<Child> {
     let bot_1 = Command::new("python")
-        .arg("D:\\Over9000\\Documents\\Dev\\UAIS-2022-Hex-Bot\\random_bot\\main.py")
+        .arg("../random_bot/main.py")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
@@ -47,16 +47,15 @@ fn test_empty_show_board() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -77,16 +76,15 @@ fn test_sety_a1() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "W . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "W . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -105,16 +103,15 @@ fn test_sety_a8() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . W 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . W \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -133,16 +130,15 @@ fn test_sety_h1() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       W . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       W . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -161,16 +157,15 @@ fn test_sety_h8() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . W 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . W \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -189,16 +184,15 @@ fn test_sety_mid() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . W . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . W . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -219,16 +213,15 @@ fn test_sety_on_own_spot() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "W . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "W . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -249,16 +242,15 @@ fn test_sety_on_opponents_spot() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "B . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "B . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -278,16 +270,15 @@ fn test_seto_a1() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "B . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "B . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -306,16 +297,15 @@ fn test_seto_a8() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . B 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . B \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -334,16 +324,15 @@ fn test_seto_h1() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       B . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       B . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -362,16 +351,15 @@ fn test_seto_h8() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . B 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . B \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -390,16 +378,15 @@ fn test_seto_mid() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . B . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . B . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -420,16 +407,15 @@ fn test_seto_on_own_spot() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "B . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "B . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -450,16 +436,15 @@ fn test_seto_on_opponents_spot() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "W . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "W . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -481,16 +466,15 @@ fn test_own_swap() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "B W . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "B W . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -511,16 +495,15 @@ fn test_opponent_swap() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "W B . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "W B . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -542,16 +525,15 @@ fn test_own_swap_at_wrong_time() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "W B B . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "W B B . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -573,16 +555,15 @@ fn test_opponent_swap_at_wrong_time() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        "B W W . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ "B W W . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -651,36 +632,16 @@ fn test_basic_wins_with_white() -> io::Result<()> {
 
     let mut stdout = bot.stdout.take().unwrap();
     let mut output = get_command_output(&mut stdout, 8);
-    assert_eq!(
-        output.as_str().trim_start(),
-        "1
-= 
-"
-    );
+    assert_eq!( output.as_str().trim_start(), "1\n= \n");
 
     output = get_command_output(&mut stdout, 9);
-    assert_eq!(
-        output.as_str().trim_start(),
-        "1
-= 
-"
-    );
+    assert_eq!( output.as_str().trim_start(), "1\n= \n");
 
     output = get_command_output(&mut stdout, 16);
-    assert_eq!(
-        output.as_str().trim_start(),
-        "1
-= 
-"
-    );
+    assert_eq!( output.as_str().trim_start(), "1\n= \n");
 
     output = get_command_output(&mut stdout, 9);
-    assert_eq!(
-        output.as_str().trim_start(),
-        "1
-= 
-"
-    );
+    assert_eq!( output.as_str().trim_start(), "1\n= \n");
 
     shutdown_bot(&mut bot)?;
     Ok(())
@@ -708,16 +669,15 @@ fn test_unset_clears_correctly() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -743,16 +703,15 @@ fn test_unset_leaves_other_cells() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". W W W W W W W 
- W W W W W W W W 
-  W W W W W W W W 
-   W W W W W W W W 
-    W W W W W W W W 
-     W W W W W W W W 
-      W W W W W W W W 
-       W W W W W W W W 
-= 
-"
+        [ ". W W W W W W W \n",
+          " W W W W W W W W \n",
+          "  W W W W W W W W \n",
+          "   W W W W W W W W \n",
+          "    W W W W W W W W \n",
+          "     W W W W W W W W \n",
+          "      W W W W W W W W \n",
+          "       W W W W W W W W \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -772,16 +731,15 @@ fn test_unset_on_empty_cell() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -803,11 +761,10 @@ fn test_init_board_3() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . 
- . . . 
-  . . . 
-= 
-"
+        [ ". . . \n",
+          " . . . \n",
+          "  . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -826,19 +783,18 @@ fn test_init_board_11() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . . . . 
- . . . . . . . . . . . 
-  . . . . . . . . . . . 
-   . . . . . . . . . . . 
-    . . . . . . . . . . . 
-     . . . . . . . . . . . 
-      . . . . . . . . . . . 
-       . . . . . . . . . . . 
-        . . . . . . . . . . . 
-         . . . . . . . . . . . 
-          . . . . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . . . . \n",
+          " . . . . . . . . . . . \n",
+          "  . . . . . . . . . . . \n",
+          "   . . . . . . . . . . . \n",
+          "    . . . . . . . . . . . \n",
+          "     . . . . . . . . . . . \n",
+          "      . . . . . . . . . . . \n",
+          "       . . . . . . . . . . . \n",
+          "        . . . . . . . . . . . \n",
+          "         . . . . . . . . . . . \n",
+          "          . . . . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
@@ -867,16 +823,15 @@ fn test_init_board_clears_correctly() -> io::Result<()> {
 
     assert_eq!(
         output.as_str().trim_start(),
-        ". . . . . . . . 
- . . . . . . . . 
-  . . . . . . . . 
-   . . . . . . . . 
-    . . . . . . . . 
-     . . . . . . . . 
-      . . . . . . . . 
-       . . . . . . . . 
-= 
-"
+        [ ". . . . . . . . \n",
+          " . . . . . . . . \n",
+          "  . . . . . . . . \n",
+          "   . . . . . . . . \n",
+          "    . . . . . . . . \n",
+          "     . . . . . . . . \n",
+          "      . . . . . . . . \n",
+          "       . . . . . . . . \n",
+          "= \n"].concat()
     );
 
     shutdown_bot(&mut bot)?;
