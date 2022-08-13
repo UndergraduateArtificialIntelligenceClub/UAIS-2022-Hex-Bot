@@ -49,7 +49,7 @@ immediate loss, so don't try to cheat
 | Message | Example | Description |
 | ------- | ------- | ----------- |
 | `init_board {digit}` | `init_board 8` | Tells the bot to reset the game to an empty board w/ side length "digit" |
-| `show_board` | `show_board` | Prints the board to stdout. This is primarily used for testing purposes & when playing against a human opponent |
+| `show_board` | `show_board` | Prints the board to stdout. Used for internal testing |
 | `make_move` | `make_move` | Asks the bot to give their move, based on the current board |
 | `seto {}` | `seto a1` | Tells the bot about a move for the other bot |
 | `sety {}` | `sety a1` | Tells the bot to play a move for itself |

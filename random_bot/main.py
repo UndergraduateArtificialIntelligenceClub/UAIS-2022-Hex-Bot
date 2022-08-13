@@ -16,12 +16,7 @@ def main():
             print("Cmd not recognized. Please refer to known commands.")
         else:
             bot.run_command(cmd)
-            respond()
         cmd = get_cmd()
-
-
-def respond(message=""):
-    print("= " + message + "\n")
 
 
 def get_cmd():

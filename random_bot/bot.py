@@ -6,7 +6,7 @@ seed(42)  # Get same results temporarily
 
 
 class RandomHexBot:
-    def __init__(self, color, board_size=8):
+    def __init__(self, color, board_size=26):
         self.color = color
         self.move_count = 0
         self.opp = BLACK if color == WHITE else WHITE
@@ -65,10 +65,11 @@ class RandomHexBot:
         """Tells the bot to reset the game to an empty board with a specified side length
 
         Args:
-            board_size (int): The width & height of the game board to create
+            board_size (int): The width & height of the hex game board to create
         """
-        self.board_size = int(board_size)
-        self.board = []
+        board_size = int(board_size)
+        self.board_size = board_size
+        self.board = [EMPTY for i in range(board_size**2)]
         self.move_count = 0
 
         self.offsets = [
@@ -80,11 +81,11 @@ class RandomHexBot:
             self.board_size + 1,
         ]
 
-        self.board.append(BORDER)
-        for _ in range(self.board_size):
-            for __ in range(self.board_size):
-                self.board.append(EMPTY)
-            self.board.append(BORDER)
+        #self.board.append(BORDER)
+        #for _ in range(self.board_size):
+        #    for __ in range(self.board_size):
+        #        self.board.append(EMPTY)
+        #    self.board.append(BORDER)
 
         self.init_neighbours()
 
@@ -95,19 +96,19 @@ class RandomHexBot:
         Returns:
             bool: True if the command exists and ran successfully, False otherwise
         """
-        for i, cell in enumerate(self.board[:-1]):
-            if cell == BORDER:
-                print(
-                    "\n" + " " * (i // self.board_size), end=""
-                )  # Padding subsequent rows
-            elif cell == WHITE:
-                print("W ", end="")
-            elif cell == BLACK:
-                print("B ", end="")
-            else:
-                print(". ", end="")
-        print()
-        return True
+        tile_chars = {
+            EMPTY: ".",
+            WHITE: "X",
+            BLACK: "O",
+        }
+
+        chars = list(map(lambda x: tile_chars[x], self.board))
+
+        for i in reversed(range(1, self.board_size+1)):  # Reverse to avoid shifting indicies
+            chars.insert(i * self.board_size, "|")
+
+        print("".join(chars))
+        return
 
     def make_move(self):
         """Generates the move. For this bot, the move is randomly selected from all empty positions."""
@@ -117,8 +118,8 @@ class RandomHexBot:
                 empties.append(i)
 
         move = self.coord_to_move(choice(empties))
-        print(move)
         self.sety(move)
+        print(move)
         return
 
     def seto(self, move):
@@ -127,13 +128,7 @@ class RandomHexBot:
         Args:
             move (str): A human-readable position on which the opponent has just played
         """
-
-        if move == "swap":
-            if self.move_count != 1:
-                print("'swap' can only occur on second move (opponents first move)!")
-            else:
-                self.color, self.opp = self.opp, self.color
-            return
+        # TODO: Handle swap move. Logic moved to move_to_coord()
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
             print("Trying to play on a non-empty square!")
@@ -143,17 +138,11 @@ class RandomHexBot:
         return
 
     def sety(self, move):
-        """Tells the bot to play a move for itself
+        """Set Your [tile]. Tells the bot to play a move for itself
 
         Args:
             move (str): A human-readable position on the board
         """
-        if move == "swap":
-            if self.move_count != 1:
-                print("'swap' can only occur on second move (opponents first move)!")
-            else:
-                self.color, self.opp = self.opp, self.color
-            return
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
             print("Trying to play on a non-empty square!")
@@ -185,7 +174,7 @@ class RandomHexBot:
         seen = set()
 
         def dfs(i, color, level=0):
-            """Oopsie poopsie! I made a fucky wucky! This code is super-duper slow! UwU
+            """Oopsie poopsie! I made a fucky wucky! This code is super-duper slow! UwU7
 
             Args:
                 i (int): The current location of the depth-first search
@@ -235,13 +224,8 @@ class RandomHexBot:
                 self.neighbours.append([])
                 for offset in self.offsets:
                     new_coord = offset + i
-                    if (
-                        0 <= new_coord < len(self.board)
-                        and self.board[new_coord] != BORDER
-                    ):
+                    if 0 <= new_coord < len(self.board):
                         self.neighbours[-1].append(offset)
-
-        return
 
     def coord_to_move(self, coord):
         """Converts an integer coordinate to a human-readable move
@@ -251,13 +235,15 @@ class RandomHexBot:
 
         Returns:
             str: A human-readable version of coord
+        Example:
+            >>> assert coord_to_move(0) == "a1"
+            >>> assert coord_to_move(self.board_size + 2) == "b3"
+            >>> assert coord_to_move(22 * self.board_size + 11) == "w12"
         """
-        assert coord, "Coord must be non-zero"
-        coord -= 1  # Ignores border at start of board
-        letter = ord("a") + coord // (self.board_size + 1)
-        number = coord % (self.board_size + 1) + 1
+        letter = chr(coord // self.board_size + ord("a"))
+        number = coord % self.board_size + 1
 
-        return chr(letter) + str(number)
+        return f'{letter}{number}'
 
     def move_to_coord(self, move):
         """Converts a human-readable move to a coordinate within self.board
@@ -267,25 +253,27 @@ class RandomHexBot:
 
         Returns:
             int: The integer coordinate of 'move', used to interact with the board
+
+        Example:
+            >>> assert move_to_coord("a1") == 0
+            >>> assert move_to_coord("b3") == self.board_size + 2
+            >>> assert move_to_coord("w12") == 22 * self.board_size + 11
         """
-        assert len(move), "Move must be a non-empty string!"
-        assert move[
-            0
-        ].isalpha(), "The first character of move must be an alphanumeric character!"
+        # TODO: Handle swap move
+        if move == "swap":
+            self.swap_move()
+            return
+
+        assert len(move) >= 2, "Move must be a character-digit pair. Ex: a12"
+        assert move[0].isalpha(), "First character must be a letter. Ex: a12"
+        assert move[1:].isdigit(), "Digits must follow the first character. Ex: a12"
         assert (
             ord(move[0]) - ord("a") < self.board_size
         ), "The letter in 'move' must have value less than board size!"
-        assert move[
-            1:
-        ].isdigit(), "All characters other than the first must be numeric in move!"
         assert (
             0 < int(move[1:]) <= self.board_size
         ), "Integer part of move must be within range (0, board_size]!"
 
-        coord = 1  # Ignores first border in self.board
-        for _ in range(ord("a"), ord(move[0])):
-            coord += self.board_size + 1
-
-        offset = int(move[1:]) - 1
-        coord += offset
-        return coord
+        column = int(move[1:]) - 1
+        row = ord(move[0]) - ord("a")
+        return row * self.board_size + column
