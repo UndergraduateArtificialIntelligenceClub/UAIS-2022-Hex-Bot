@@ -4,6 +4,8 @@ from random import choice, seed
 
 seed(42)  # Get same results temporarily
 
+# Note: WHITE goes left->right, BLACK goes top->bottom
+
 
 class RandomHexBot:
     def __init__(self, color, board_size=26):
@@ -130,11 +132,11 @@ class RandomHexBot:
         """
         # TODO: Handle swap move. Logic moved to move_to_coord()
         coord = self.move_to_coord(move)
-        if self.board[coord] != EMPTY:
-            print("Trying to play on a non-empty square!")
-            return
-        self.board[coord] = self.opp
-        self.move_count += 1
+        if self.board[coord] == EMPTY:
+            # TODO: Warn or not?
+            #print("Trying to play on a non-empty square!")
+            self.board[coord] = self.opp
+            self.move_count += 1
         return
 
     def sety(self, move):
@@ -145,7 +147,7 @@ class RandomHexBot:
         """
         coord = self.move_to_coord(move)
         if self.board[coord] != EMPTY:
-            print("Trying to play on a non-empty square!")
+            #print("Trying to play on a non-empty square!")
             return
         self.board[coord] = self.color
         self.move_count += 1
@@ -180,10 +182,13 @@ class RandomHexBot:
                 i (int): The current location of the depth-first search
                 color (int): The current color of the dfs.
             """
-            if color == WHITE and (i - self.board_size) % (self.board_size + 1) == 0:
-                return True  # Touching right of board
-            elif color == BLACK and i >= (self.board_size) * (self.board_size + 1):
-                return True  # Touching bottom of board
+            is_right_column = (i + 1) % self.board_size == 0
+            is_bottom_row = i >= self.board_size * (self.board_size - 1)
+
+            if color == WHITE and is_right_column:
+                return True
+            elif color == BLACK and is_bottom_row:
+                return True
 
             # Label hexagon as 'visited' so we don't get infinite recusion
             seen.add(i)
@@ -203,12 +208,12 @@ class RandomHexBot:
 
         # Iterate over all starting spaces for black & white, performing dfs on empty
         # spaces (hint: this leads to repeated computation!)
-        for i in range(1, self.board_size + 1):
+        for i in range(0, self.board_size):
             if self.board[i] == BLACK and dfs(i, BLACK):
                 print(1 if self.color == BLACK else -1)
                 return
 
-        for i in range(1, len(self.board), self.board_size + 1):
+        for i in range(0, len(self.board), self.board_size):
             if self.board[i] == WHITE and dfs(i, WHITE):
                 print(1 if self.color == WHITE else -1)
                 return
