@@ -16,11 +16,17 @@ name of your program as an argument.
 The Bot infrastructure is 🚀<u>**blazing fast**</u>⚡, since it's been written
 in fearlessly concurrent and zero-cost abstracted ✨Rust✨.
 
+# Hex the board game
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
 for bots to play. It consists of two players, we'll denote them red and blue,
 trying to form and uninterrupted path between their sides of the board. On each
 turn, a player must place exactly one piece in any untaken tile. It's like
 extended tiktoktoe
+
+Our board uses coordinates of the form `[a-z][0-9]+`. Hexagons are adjacent to
+2-6 other hexagons, depending on their position. An example of our coordinate
+system on a 4x4 grid looks like the one below. Bots must be able to implement up
+to 26x26 sized boards, though they'll always been square
 
 # Central program
 This program will start up both bots, send and receive communication and
