@@ -1,22 +1,65 @@
 // This program is written with unix in mind. No clue what'll happen on windows...
 mod board;
+mod testing;
 
 use std::process::{self, Command, Stdio};
 use std::io::{self, BufRead, Read, Write};
 use board::{Board, Tile};
 
-fn main()
-{
-    // Read cli args
-    let mut args = std::env::args();
+use std::path::PathBuf;
 
-    args.next();
-    let bot_1 = args.next().expect("Please provide two bots");
-    let bot_2 = args.next().expect("Please provide two bots");
+use clap::{Parser, Subcommand};
 
-    println!("UAIS Hex Bot Controller v{}\n\
-              Type \"help\" for options", env!("CARGO_PKG_VERSION"));
+#[derive(Parser, Debug)]
+#[clap(name = "UAIS Sentience Validator")]
+#[clap(author = "Undergraduate Artifical Intelligence Society <https://uais.dev>")]
+#[clap(version = "0.1.1")]
+#[clap(about = "Test and match up hex bots", long_about = None)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
+}
 
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Run all tests on a bot
+    Test {
+        /// Path to the main executable for the bot
+        #[clap(action)]
+        bot_path: PathBuf,
+    },
+    /// Let two bots face off in hex
+    Matchup {
+        /// The size of the board squared. Ex: 11
+        #[clap(action)]
+        size: u8,
+        /// Path to the main executable for the white bot
+        #[clap(action)]
+        white_bot: PathBuf,
+        /// Path to the main executable for the black bot
+        #[clap(action)]
+        black_bot: PathBuf,
+    },
+}
+
+fn main() {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Test { bot_path } => {
+            if let Err(_) = testing::test_bot(bot_path) {
+                println!("Oh no... something didn't work");
+            }
+        }
+        Commands::Matchup { size, white_bot, black_bot } => {
+            println!("Board size: {}\nWhite: {:?}\nBlack:{:?}", size, white_bot, black_bot);
+            todo!();
+        }
+    }
+}
+
+fn run_match() {
+    todo!();
     // Repl
     let stdin = io::stdin();
 
