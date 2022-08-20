@@ -12,11 +12,14 @@ def main():
 
     cmd = get_cmd()
     while cmd[0] != "quit":
-        if not bot.is_runnable(cmd):
-            print("Cmd not recognized. Please refer to known commands.")
-        else:
+        try:
+            getattr(bot, cmd[0])
             bot.run_command(cmd)
+        except AttributeError:
+            print("Cmd not recognized. Please refer to known commands.")
+
         cmd = get_cmd()
+    return
 
 
 def get_cmd():

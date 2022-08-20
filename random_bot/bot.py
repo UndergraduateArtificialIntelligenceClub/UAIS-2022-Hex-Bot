@@ -6,14 +6,12 @@ seed(42)  # Get same results temporarily
 
 # Note: WHITE goes left->right, BLACK goes top->bottom
 
-
 class RandomHexBot:
-    def __init__(self, color, board_size=26):
+    def __init__(self, color, board_size=11):
         self.color = color
         self.move_count = 0
         self.opp = BLACK if color == WHITE else WHITE
         self.init_board(board_size)
-        self.init_neighbours()
 
         self.pub = {
             "init_board": self.init_board,
@@ -73,21 +71,6 @@ class RandomHexBot:
         self.board_size = board_size
         self.board = [EMPTY for i in range(board_size**2)]
         self.move_count = 0
-
-        self.offsets = [
-            -1,
-            1,
-            -self.board_size,
-            -self.board_size - 1,
-            self.board_size,
-            self.board_size + 1,
-        ]
-
-        #self.board.append(BORDER)
-        #for _ in range(self.board_size):
-        #    for __ in range(self.board_size):
-        #        self.board.append(EMPTY)
-        #    self.board.append(BORDER)
 
         self.init_neighbours()
 
@@ -192,13 +175,11 @@ class RandomHexBot:
 
             # Label hexagon as 'visited' so we don't get infinite recusion
             seen.add(i)
-            for offset in self.offsets:
-                new_coord = i + offset
+            for neighbour in self.neighbours[i]:
                 if (
-                    new_coord not in seen
-                    and 0 <= new_coord < len(self.board)
-                    and self.board[new_coord] == color
-                    and dfs(new_coord, color, level=level + 1)
+                    neighbour not in seen
+                    and self.board[neighbour] == color
+                    and dfs(neighbour, color, level=level + 1)
                 ):
                     return True
 
@@ -224,13 +205,28 @@ class RandomHexBot:
     def init_neighbours(self):
         """Precalculates all neighbours for each cell"""
         self.neighbours = []
-        for i, cell in enumerate(self.board):
-            if cell == EMPTY:
-                self.neighbours.append([])
-                for offset in self.offsets:
-                    new_coord = offset + i
-                    if 0 <= new_coord < len(self.board):
-                        self.neighbours[-1].append(offset)
+
+        offsets_normal = [-1, 1, -self.board_size, self.board_size, -self.board_size+1, self.board_size-1]
+        offsets_left   = [    1, -self.board_size, self.board_size, -self.board_size+1                   ]
+        offsets_right  = [-1,    -self.board_size, self.board_size,                     self.board_size-1]
+
+        def legalize_offsets(cell, offsets):
+            a = []
+            for offset in offsets:
+                if 0 <= cell + offset < self.board_size**2:
+                    a.append(cell + offset)
+            return a
+
+        for cell in range(self.board_size**2):
+            if (cell+1) % self.board_size == 0:
+                offsets = offsets_right
+            elif cell % self.board_size == 0:
+                offsets = offsets_left
+            else:
+                offsets = offsets_normal
+
+            self.neighbours.append(legalize_offsets(cell, offsets))
+        return
 
     def coord_to_move(self, coord):
         """Converts an integer coordinate to a human-readable move

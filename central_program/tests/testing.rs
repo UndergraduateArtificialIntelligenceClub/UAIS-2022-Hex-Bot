@@ -506,7 +506,7 @@ fn test_win_others_big() -> io::Result<()> {
     let sety = [];
     let seto = ["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11", "d11",
         "e11", "f10", "g9", "h9", "i8", "j8", "j9", "j10", "j11", "k11"];
-    let expected = "1";
+    let expected = "-1";
 
     assert_win(size, &sety, &seto, expected)
 }
@@ -518,8 +518,9 @@ fn test_win_others_big() -> io::Result<()> {
 //  - Swap as opponent's move at the wrong time
 //
 // TODO: Test invalid coordinates
-// Behaviour for invalid coodrdinates is currently undefined, though we probably should be crashing
-// the program from an invalid input. Maybe some sort of output to signal the input wasn't read?
+// Behaviour for invalid coodrdinates is currently undefined, though we probably shouldn't be
+// crashing the program from an invalid input. Maybe some sort of output to signal the input wasn't
+// read?
 
 // TODO: Fix all tests below
 //
