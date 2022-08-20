@@ -26,7 +26,11 @@ extended tiktoktoe
 Our board uses coordinates of the form `[a-z][0-9]+`. Hexagons are adjacent to
 2-6 other hexagons, depending on their position. An example of our coordinate
 system on a 4x4 grid looks like the one below. Bots must be able to implement up
-to 26x26 sized boards, though they'll always been square
+to 26x26 sized boards. All boards will be square
+
+<p align="center">
+    <img width="400" alt="Alacritty Logo" src="https://raw.githubusercontent.com/UndergraduateArtificialIntelligenceClub/UAIS-2022-Hex-Bot/main/hex_grid_example.jpg">
+</p>
 
 # Central program
 This program will start up both bots, send and receive communication and
