@@ -1,70 +1,204 @@
-use std::io::{self, BufRead, BufReader, Write};
-use std::process::{Child, Command, Stdio, ChildStdout};
+use std::io::{BufRead, BufReader, Write};
+use std::process::{Child, Command, Stdio};
 use std::path::PathBuf;
 use termion::{color, style};
 
-static mut IS_WHITE: bool = true;
-static mut BOT_PATH: Option<PathBuf> = None;
-static mut BOT_ARGS: Vec<String> = vec![];
+use super::Color;
 
-pub fn test_bot(is_white: bool, bot_path: PathBuf, bot_args: &[String]) -> io::Result<()> {
-    unsafe {
-        IS_WHITE = is_white;
-        BOT_PATH = Some(bot_path);
-        BOT_ARGS = bot_args.to_vec();
-    }
-
-    println!("Init board ==================================================");
-    println!("`init_board {{n}}` must create an nxn blank board");
-    test("Creates a 1x1 board", test_init_board(1)?);
-    test("Creates a 2x2 board", test_init_board(2)?);
-    test("Creates a 3x3 board", test_init_board(3)?);
-    test("Creates a 8x8 board", test_init_board(8)?);
-    test("Creates a 11x11 board", test_init_board(11)?);
-    test("Creates a 26x26 board", test_init_board(26)?);
-
-    println!("Set your tile ===============================================");
-    println!("`sety {{coord}}` sets your tile, X, at the given coordinate");
-    test("Sets own tile on a1", test_set_yours_a1()?);
-    test("Sets own tile on c8", test_set_yours_c8()?);
-    test("Sets own tiles on first column", test_set_yours_rows()?);
-    test("Sets own tiles on every spot", test_set_yours_fill()?);
-    test("Sets own tiles diagonally", test_set_yours_diagonal()?);
-    test("Sets own twice on same spot", test_set_yours_twice_on_same_spot()?);
-    test("Sets own tiles diagonally on a large board", test_set_yours_big_diagonal()?);
-    test("Sets own tiles on every spot on a large board", test_set_yours_big_fill()?);
-
-    println!("Set other player's tile =====================================");
-    println!("`seto {{coord}}` sets the other player's tile, O, at the given coordinate");
-    test("Sets opposing tile on a1", test_set_others_a1()?);
-    test("Sets opposing tile on c8", test_set_others_c8()?);
-    test("Sets opposing tiles on first column", test_set_others_rows()?);
-    test("Sets opposing tiles on every spot", test_set_others_fill()?);
-    test("Sets opposing tiles diagonally", test_set_others_diagonal()?);
-    test("Sets opposing twice on same spot", test_set_others_twice_on_same_spot()?);
-    test("Sets opposing tiles diagonally on a large board", test_set_others_big_diagonal()?);
-    test("Sets opposing tiles on every spot on a large board", test_set_others_big_fill()?);
-
-    println!("Unsetting tiles =============================================");
-    println!("`unset {{coord}}` clears any tile at that coordinate");
-    test("Unsets tiles", test_unset_tiles()?);
-    test("Unsets only specified tiles", test_unset_leave_others_untouched()?);
-    test("Unsets empty cell without crashing", test_unset_on_empty_cell()?);
-    test("Initializing a new board clears all cells", test_init_clear()?);
-
-    println!("Checking for a win ==========================================");
-    println!("`check_win` prints 1 if you've won, -1 if the opponent won, 0 otherwise");
-    test("Prints 0 for blank boards", test_no_win_blank()?);
-    test("Identifies white win across one row", test_white_win_small()?);
-    test("Identifies black win across one column", test_black_win_small()?);
-    test("Identifies black win on a big board", test_black_win_big()?);
-
-    Ok(())
+pub struct BotTest {
+    color: Color,
+    bot_path: PathBuf,
+    bot_args: Vec<String>,
 }
 
-// Pretty output for each testcase
-fn test(name: &str, is_pass: bool) {
-    if is_pass {
+impl BotTest {
+    pub fn new(color: Color, bot_path: PathBuf, bot_args: Vec<String>) -> Self {
+        Self { color, bot_path, bot_args }
+    }
+
+    pub fn test(&mut self) {
+        println!("Init board ==================================================");
+        println!("`init_board {{n}}` must create an nxn blank board");
+        test_init_board(self.get_bot(), 1);
+        test_init_board(self.get_bot(), 2);
+        test_init_board(self.get_bot(), 3);
+        test_init_board(self.get_bot(), 8);
+        test_init_board(self.get_bot(), 11);
+        test_init_board(self.get_bot(), 26);
+
+        println!("Set your tile ===============================================");
+        println!("`sety {{coord}}` sets your tile, X, at the given coordinate");
+        test_set_yours_a1(self.get_bot());
+        test_set_yours_c8(self.get_bot());
+        test_set_yours_all_rows(self.get_bot());
+        test_set_yours_fill(self.get_bot());
+        test_set_yours_twice_on_same_spot(self.get_bot());
+        test_set_yours_diagonal(self.get_bot());
+        test_set_yours_big_diagonal(self.get_bot());
+        test_set_yours_big_fill(self.get_bot());
+
+        println!("Set other player's tile =====================================");
+        println!("`seto {{coord}}` sets the other player's tile, O, at the given coordinate");
+        test_set_others_a1(self.get_bot());
+        test_set_others_c8(self.get_bot());
+        test_set_others_all_rows(self.get_bot());
+        test_set_others_fill(self.get_bot());
+        test_set_others_diagonal(self.get_bot());
+        test_set_others_twice_on_same_spot(self.get_bot());
+        test_set_others_big_diagonal(self.get_bot());
+        test_set_others_big_fill(self.get_bot());
+
+        println!("Unsetting tiles =============================================");
+        println!("`unset {{coord}}` clears any tile at that coordinate");
+        self.test_unset_tiles();
+
+        println!("Checking for a win ==========================================");
+        println!("`check_win` prints 1 if you've won, -1 if the opponent won, 0 otherwise");
+        test_no_win_blank(self.get_bot(), 1);
+        test_no_win_blank(self.get_bot(), 3);
+        test_no_win_blank(self.get_bot(), 8);
+        test_no_win_blank(self.get_bot(), 20);
+        test_no_win_blank(self.get_bot(), 26);
+        test_white_win_small(self.get_bot(), self.is_white());
+        test_black_win_small(self.get_bot(), self.is_white());
+        test_black_win_big(self.get_bot(), self.is_white());
+    }
+
+    // Starts up a new bot
+    fn get_bot(&self) -> Child {
+        Command::new(&self.bot_path)
+            .args(&self.bot_args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn child process")
+    }
+
+    fn is_white(&self) -> bool {
+        self.color == Color::White
+    }
+
+    // `unset` has to be tested very manually...
+    fn test_unset_tiles(&self) {
+        let mut bot = self.get_bot();
+        let bot_out = bot.stdout.as_mut().unwrap();
+        let bot_in = bot.stdin.as_mut().unwrap();
+
+        let mut reader = BufReader::new(bot_out);
+        let mut real_out = String::new();
+
+        write!(bot_in, "init_board 4\n")
+            .expect("Unset tiles: Failed to init board");
+
+        for coord in ["a1", "a2", "d3", "d4"] {
+            write!(bot_in, "sety {}\n", coord)
+                .expect("Unset tiles: Failed to sety");
+        }
+
+        for coord in ["d1", "d2", "a3", "a4"] {
+            write!(bot_in, "seto {}\n", coord)
+                .expect("Unset tiles: Failed to seto");
+        }
+
+        write!(bot_in, "unset a2\nshow_board\n")
+            .expect("Unset tiles: Failed to show_board");
+
+        reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
+
+        pretty_print_result("Unset your a1", "X.OO|....|....|OOXX|\n", &real_out);
+        real_out.clear();
+
+        write!(bot_in, "unset a3\nunset d2\nunset d3\nshow_board\n")
+            .expect("Unset tiles: Failed to unset");
+
+        reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
+
+        pretty_print_result("Unset yours and opponent's tiles", "X..O|....|....|O..X|\n", &real_out);
+        real_out.clear();
+
+        write!(bot_in, "unset a1\nunset a4\nunset d1\nunset d4\nshow_board\n")
+            .expect("Unset tiles: Failed to unset");
+
+        reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
+
+        pretty_print_result("Unset all tiles", "....|....|....|....|\n", &real_out);
+        real_out.clear();
+
+        write!(bot_in, "unset a1\nunset a4\nunset d1\nunset d4\nshow_board\n")
+            .expect("Unset tiles: Failed to unset");
+
+        reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
+
+        pretty_print_result("Unset on empty tiles", "....|....|....|....|\n", &real_out);
+        real_out.clear();
+
+        write!(bot_in, "sety a1\nsety a4\nsety d1\nsety d4\ninit_board 4\nshow_board\n")
+            .expect("Unset tiles: Failed init board");
+
+        reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
+
+        pretty_print_result("init_board unsets all tiles", "....|....|....|....|\n", &real_out);
+
+    }
+}
+
+#[derive(Debug)]
+struct Test<T, G>
+where
+    T: AsRef<str> + std::fmt::Display + std::fmt::Debug,
+    G: AsRef<str> + std::fmt::Display + std::fmt::Debug
+{
+    pub name: G,
+    pub bot: Child,
+    pub board_size: u8,
+    pub sety: Vec<T>,
+    pub seto: Vec<T>,
+    pub expected_out: String,
+    pub real_out: String,
+}
+
+impl<T, G> Test<T, G>
+where
+    T: AsRef<str> + std::fmt::Display + std::fmt::Debug,
+    G: AsRef<str> + std::fmt::Display + std::fmt::Debug
+{
+    pub fn run(mut self, cmd: &str) {
+        self.setup_board();
+        self.real_out = self.get_out(cmd);
+        self.pretty_print();
+    }
+
+    // Pretty output for each testcase
+    fn pretty_print(&self) {
+        pretty_print_result(self.name.as_ref(), &self.expected_out, &self.real_out)
+    }
+
+    // Init board with tiles
+    fn setup_board(&mut self) {
+        let bot_in = self.bot.stdin.as_mut().unwrap();
+
+        write!(bot_in, "init_board {}\n", self.board_size).expect("Failed to write init_board");
+
+        for coord in self.sety.iter() { write!(bot_in, "sety {}\n", coord).expect("Failed to write sety") }
+        for coord in self.seto.iter() { write!(bot_in, "seto {}\n", coord).expect("Failed to write seto") }
+    }
+
+    // Check output
+    fn get_out(&mut self, cmd: &str) -> String {
+        let bot_out = self.bot.stdout.as_mut().unwrap();
+        let bot_in = self.bot.stdin.as_mut().unwrap();
+        write!(bot_in, "{}\n", cmd).expect(&format!("Failed to write: {}", cmd));
+
+        let mut reader = BufReader::new(bot_out);
+        let mut output = String::new();
+
+        reader.read_line(&mut output).unwrap();
+        output.replace("\r\n", "\n").to_owned()  // DOS compatibility
+    }
+}
+
+fn pretty_print_result(name: &str, expected_out: &str, real_out: &str) {
+    if expected_out == real_out {
         println!("{}✓ {}... ok{}",
             color::Fg(color::Green),
             name,
@@ -78,118 +212,39 @@ fn test(name: &str, is_pass: bool) {
             color::Fg(color::Reset),
             style::Reset,
         );
+        println!("{}EXPECTED ====================\n{}{}",
+            color::Fg(color::Red), color::Fg(color::Reset), expected_out);
+        println!("{}REAL ========================\n{}{}",
+            color::Fg(color::Red), color::Fg(color::Reset), real_out);
+        println!("{}============================={}",
+            color::Fg(color::Red), color::Fg(color::Reset));
     }
 }
 
-// Starts up a new bot
-fn get_bot() -> io::Result<Child> {
-    unsafe {
-        let bot = Command::new(BOT_PATH.as_ref().unwrap().as_os_str())
-            .args(&BOT_ARGS)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()?;
 
-        Ok(bot)
-    }
-}
+// Init board =======================================================
+// `init_board {{n}}` must create an nxn blank board
 
-fn shutdown_bot(bot: &mut Child) -> io::Result<()> {
-    let bot_in = bot.stdin.as_mut().unwrap();
-    write!(bot_in, "quit\n")?;
-    bot.wait()?;
-    Ok(())
-}
+fn test_init_board(bot: Child, size: u8) {
+    let mut test = Test::<String, String> {
+        name: format!("Creates a {}x{} board", size, size),
+        bot: bot,
+        board_size: size,
+        sety: vec![],
+        seto: vec![],
+        expected_out: String::new(), //"...|...|...|\n".to_string(),
+        real_out: String::new(),
+    };
 
-fn get_command_output(stdout: &mut ChildStdout) -> String {
-    let mut reader = BufReader::new(stdout);
-    let mut output = String::new();
-
-    reader.read_line(&mut output).unwrap();
-    output.replace("\r\n", "\n")  // DOS compatibility
-          .trim()
-          .to_owned()
-}
-
-// Tests a blank board at given size
-fn test_init_board(size: usize) -> io::Result<bool> {
-    let mut bot = create_board::<&str>(size, &[], &[])?;
-
-    let bot_in = bot.stdin.as_mut().unwrap();
-    write!(bot_in, "show_board\n")?;
-    let mut stdout = bot.stdout.take().unwrap();
-    let output = get_command_output(&mut stdout);
-
-    let mut expected = String::new();
-    for _ in 0..size {
-        for _ in 0..size {
-            expected.push_str(".")
+    for _row in 1..=size {
+        for _column in 1..=size {
+            test.expected_out.push_str(".");
         }
-        expected.push_str("|")
+        test.expected_out.push_str("|");
     }
+    test.expected_out.push_str("\n");
 
-    shutdown_bot(&mut bot)?;
-    Ok(output == expected)
-}
-
-// Creates bot and sets up board. Requires most commands work
-fn create_board<T>(board_size: usize, sety: &[T], seto: &[T]) -> io::Result<Child>
-where
-    T: AsRef<str> + std::fmt::Display
-{
-    let mut bot = get_bot()?;
-    let bot_in = bot.stdin.as_mut().unwrap();
-
-    write!(bot_in, "init_board {}\n", board_size)?;
-
-    for coord in sety.iter() { write!(bot_in, "sety {}\n", coord)? }
-    for coord in seto.iter() { write!(bot_in, "seto {}\n", coord)? }
-
-    Ok(bot)
-}
-
-// Sets a mix of your and other player's tiles
-fn assert_set<T>(board_size: usize, sety: &[T], seto: &[T], expected_out: &str) -> io::Result<bool>
-where
-    T: AsRef<str> + std::fmt::Display
-{
-    let mut bot = create_board(board_size, sety, seto)?;
-
-    let bot_in = bot.stdin.as_mut().unwrap();
-    write!(bot_in, "show_board\n")?;
-
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-
-    shutdown_bot(&mut bot)?;
-    Ok(output.as_str() == expected_out)
-}
-
-fn test_sety<T>(board_size: usize, sety: &[T], expected_out: &str) -> io::Result<bool>
-where
-    T: AsRef<str> + std::fmt::Display
-{
-    assert_set(board_size, sety, &[], expected_out)
-}
-
-fn test_seto<T>(board_size: usize, seto: &[T], expected_out: &str) -> io::Result<bool>
-where
-    T: AsRef<str> + std::fmt::Display
-{
-    assert_set(board_size, &[], seto, expected_out)
-}
-
-fn assert_win<T>(board_size: usize, sety: &[T], seto: &[T], expected: &str) -> io::Result<bool>
-where
-    T: AsRef<str> + std::fmt::Display
-{
-    let mut bot = create_board(board_size, sety, seto)?;
-
-    let bot_in = bot.stdin.as_mut().unwrap();
-    write!(bot_in, "check_win\n")?;
-
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-
-    Ok(expected == output)
+    test.run("show_board")
 }
 
 // Set your tile ====================================================
@@ -201,307 +256,288 @@ where
 // Only a single letter is allowed, followed by up to 2 digits. No need to implement anything over
 // board size 26x26. Note that the coordinates ARE 1 indexed
 
-fn test_set_yours_a1() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1"];
-    let expected_out = "X..|...|...|";
+fn test_set_yours_a1(bot: Child) {
+    let test = Test {
+        name: "Sets own tile on a1",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1"],
+        seto: vec![],
+        expected_out: "X..|...|...|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_c8() -> io::Result<bool> {
-    let board_size = 10;
-    let set_coords = ["c8"];
-    let expected_out = "\
-        ..........|\
-        ..........|\
-        .......X..|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-    ";
+fn test_set_yours_c8(bot: Child) {
+    let test = Test {
+        name: "Sets own tile on c8",
+        bot: bot,
+        board_size: 10,
+        sety: vec!["c8"],
+        seto: vec![],
+        expected_out: "\
+            ..........|\
+            ..........|\
+            .......X..|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_rows() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "b1", "c1"];
-    let expected_out = "X..|X..|X..|";
+fn test_set_yours_all_rows(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles on first column",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "b1", "c1"],
+        seto: vec![],
+        expected_out: "X..|X..|X..|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_fill() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"];
-    let expected_out = "XXX|XXX|XXX|";
+fn test_set_yours_fill(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles on every spot",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
+        seto: vec![],
+        expected_out: "XXX|XXX|XXX|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_diagonal() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "b2", "c3"];
-    let expected_out = "X..|.X.|..X|";
+fn test_set_yours_diagonal(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles diagonally",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "b2", "c3"],
+        seto: vec![],
+        expected_out: "X..|.X.|..X|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_twice_on_same_spot() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "a1", "c3"];
-    let expected_out = "X..|...|..X|";
+fn test_set_yours_twice_on_same_spot(bot: Child) {
+    let test = Test {
+        name: "Sets own twice on same spot",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "a1", "c3"],
+        seto: vec![],
+        expected_out: "X..|...|..X|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_big_diagonal() -> io::Result<bool> {
-    let board_size = 12;
-    let set_coords = ["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"];
-    let expected_out = "\
-        X...........|\
-        .X..........|\
-        ..X.........|\
-        ...X........|\
-        ....X.......|\
-        .....X......|\
-        ......X.....|\
-        .......X....|\
-        ........X...|\
-        .........X..|\
-        ..........X.|\
-        ...........X|\
-    ";
+fn test_set_yours_big_diagonal(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles diagonally on a large board",
+        bot: bot,
+        board_size: 12,
+        sety: vec!["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"],
+        seto: vec![],
+        expected_out: "\
+            X...........|\
+            .X..........|\
+            ..X.........|\
+            ...X........|\
+            ....X.......|\
+            .....X......|\
+            ......X.....|\
+            .......X....|\
+            ........X...|\
+            .........X..|\
+            ..........X.|\
+            ...........X|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_yours_big_fill() -> io::Result<bool> {
-    let board_size = 12;
-    let mut set_coords = Vec::new();
+fn test_set_yours_big_fill(bot: Child) {
+    let mut test = Test::<String, &str> {
+        name: "Sets own tiles on every spot on a large board",
+        bot: bot,
+        board_size: 12,
+        sety: vec![],
+        seto: vec![],
+        expected_out: "XXXXXXXXXXXX|".repeat(12) + "\n",
+        real_out: String::new(),
+    };
 
     for letter in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'].iter() {
         for number in 1..=12 {
-            set_coords.push(format!("{}{}", letter, number));
+            test.sety.push(format!("{}{}", letter, number));
         }
     }
 
-    let expected_out = "XXXXXXXXXXXX|".repeat(12);
-    test_sety(board_size, &set_coords, &expected_out)
+    test.run("show_board");
 }
 
 // Set other player's tile ==========================================
 // `seto {coord}` sets the other player's tile at coordinate {coord}. Use O to represent the other
 // player
 
-fn test_set_others_a1() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1"];
-    let expected_out = "O..|...|...|";
+fn test_set_others_a1(bot: Child) {
+    let test = Test {
+        name: "Sets own tile on a1",
+        bot: bot,
+        board_size: 3,
+        sety: vec![],
+        seto: vec!["a1"],
+        expected_out: "O..|...|...|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_c8() -> io::Result<bool> {
-    let board_size = 10;
-    let set_coords = ["c8"];
-    let expected_out = "\
-        ..........|\
-        ..........|\
-        .......O..|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-        ..........|\
-    ";
+fn test_set_others_c8(bot: Child) {
+    let test = Test {
+        name: "Sets own tile on c8",
+        bot: bot,
+        board_size: 10,
+        sety: vec![],
+        seto: vec!["c8"],
+        expected_out: "\
+            ..........|\
+            ..........|\
+            .......O..|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_rows() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "b1", "c1"];
-    let expected_out = "O..|O..|O..|";
+fn test_set_others_all_rows(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles on first column",
+        bot: bot,
+        board_size: 3,
+        sety: vec![],
+        seto: vec!["a1", "b1", "c1"],
+        expected_out: "O..|O..|O..|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_fill() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"];
-    let expected_out = "OOO|OOO|OOO|";
+fn test_set_others_fill(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles on every spot",
+        bot: bot,
+        board_size: 3,
+        sety: vec![],
+        seto: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
+        expected_out: "OOO|OOO|OOO|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_diagonal() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "b2", "c3"];
-    let expected_out = "O..|.O.|..O|";
+fn test_set_others_diagonal(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles diagonally",
+        bot: bot,
+        board_size: 3,
+        sety: vec![],
+        seto: vec!["a1", "b2", "c3"],
+        expected_out: "O..|.O.|..O|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_twice_on_same_spot() -> io::Result<bool> {
-    let board_size = 3;
-    let set_coords = ["a1", "a1", "c3"];
-    let expected_out = "O..|...|..O|";
+fn test_set_others_twice_on_same_spot(bot: Child) {
+    let test = Test {
+        name: "Sets own twice on same spot",
+        bot: bot,
+        board_size: 3,
+        sety: vec![],
+        seto: vec!["a1", "a1", "c3"],
+        expected_out: "O..|...|..O|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_big_diagonal() -> io::Result<bool> {
-    let board_size = 12;
-    let set_coords = ["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"];
-    let expected_out = "\
-        O...........|\
-        .O..........|\
-        ..O.........|\
-        ...O........|\
-        ....O.......|\
-        .....O......|\
-        ......O.....|\
-        .......O....|\
-        ........O...|\
-        .........O..|\
-        ..........O.|\
-        ...........O|\
-    ";
+fn test_set_others_big_diagonal(bot: Child) {
+    let test = Test {
+        name: "Sets own tiles diagonally on a large board",
+        bot: bot,
+        board_size: 12,
+        sety: vec![],
+        seto: vec!["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"],
+        expected_out: "\
+            O...........|\
+            .O..........|\
+            ..O.........|\
+            ...O........|\
+            ....O.......|\
+            .....O......|\
+            ......O.....|\
+            .......O....|\
+            ........O...|\
+            .........O..|\
+            ..........O.|\
+            ...........O|\n".to_string(),
+        real_out: String::new(),
+    };
 
-    test_seto(board_size, &set_coords, &expected_out)
+    test.run("show_board")
 }
 
-fn test_set_others_big_fill() -> io::Result<bool> {
-    let board_size = 12;
-    let mut set_coords = Vec::new();
+fn test_set_others_big_fill(bot: Child) {
+    let mut test = Test::<String, &str> {
+        name: "Sets own tiles on every spot on a large board",
+        bot: bot,
+        board_size: 12,
+        sety: vec![],
+        seto: vec![],
+        expected_out: "OOOOOOOOOOOO|".repeat(12) + "\n",
+        real_out: String::new(),
+    };
 
     for letter in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'].iter() {
         for number in 1..=12 {
-            set_coords.push(format!("{}{}", letter, number));
+            test.seto.push(format!("{}{}", letter, number));
         }
     }
 
-    let expected_out = "OOOOOOOOOOOO|".repeat(12);
-    test_seto(board_size, &set_coords, &expected_out)
-}
-
-// Unsetting tiles ==================================================
-// `unset {coord}` clears the tile in a spot. Mostly for debugging, easy to implement
-fn test_unset_tiles() -> io::Result<bool> {
-    let board_size = 4;
-    let sety = ["a1", "a2", "d3", "d4"];
-    let seto = ["d1", "d2", "a3", "a4"];
-
-    let mut bot = create_board(board_size, &sety, &seto)?;
-    let bot_in = bot.stdin.as_mut().unwrap();
-
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "XXOO|....|....|OOXX|" { return Ok(false) }
-
-    for coord in ["a2", "a3", "d2", "d3"].iter() {
-        write!(bot_in, "unset {}\n", coord)?;
-    }
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "X..O|....|....|O..X|" { return Ok(false) }
-
-    for coord in ["a1", "a4", "d1", "d4"].iter() {
-        write!(bot_in, "unset {}\n", coord)?;
-    }
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "....|....|....|....|" { return Ok(false) }
-
-    Ok(true)
-}
-
-fn test_unset_leave_others_untouched() -> io::Result<bool> {
-    let board_size = 3;
-    let sety = ["a1", "a2", "c2", "c3"];
-    let seto = ["a3", "b1", "b2", "b3", "c1"];
-
-    let mut bot = create_board(board_size, &sety, &seto)?;
-    let bot_in = bot.stdin.as_mut().unwrap();
-
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "XXO|OOO|OXX|" { return Ok(false) }
-
-    write!(bot_in, "unset b2\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "XXO|O.O|OXX|" { return Ok(false) }
-
-    write!(bot_in, "unset a2\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "X.O|O.O|OXX|" { return Ok(false) }
-
-    write!(bot_in, "unset c3\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "X.O|O.O|OX.|" { return Ok(false) }
-
-    write!(bot_in, "unset b1\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "X.O|..O|OX.|" { return Ok(false) }
-
-    Ok(true)
-}
-
-fn test_unset_on_empty_cell() -> io::Result<bool> {
-    let board_size = 3;
-    let sety = ["a1"];
-    let seto = ["c3"];
-
-    let mut bot = create_board(board_size, &sety, &seto)?;
-    let bot_in = bot.stdin.as_mut().unwrap();
-
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "X..|...|..O|" { return Ok(false) }
-
-    write!(bot_in, "unset a1\n")?;
-    write!(bot_in, "unset a1\n")?;
-    write!(bot_in, "unset c3\n")?;
-    write!(bot_in, "unset c3\n")?;
-    write!(bot_in, "unset c1\n")?;
-
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "...|...|...|" { return Ok(false) }
-
-    Ok(true)
-}
-
-// `init_board` should clear the board of all tiles
-fn test_init_clear() -> io::Result<bool> {
-    let mut bot = create_board(4, &["a1", "a2"], &["b1", "b2"])?;
-    let bot_in = bot.stdin.as_mut().unwrap();
-
-    write!(bot_in, "show_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "XX..|OO..|....|....|" { return Ok(false) }
-
-    write!(bot_in, "init_board 4\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "....|....|....|....|" { return Ok(false) }
-
-    write!(bot_in, "sety a3\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "..X.|....|....|....|" { return Ok(false) }
-
-    write!(bot_in, "init_board 26\nshow_board\n")?;
-    let output = get_command_output(bot.stdout.as_mut().unwrap());
-    if output.as_str() != "..........................|".repeat(26) { return Ok(false) }
-
-    Ok(true)
+    test.run("show_board");
 }
 
 // Check for identifying win ========================================
@@ -511,53 +547,67 @@ fn test_init_clear() -> io::Result<bool> {
 //  0 - No bot has won yet
 // All of these tests assume `sety` and `seto` work properly
 
-fn test_no_win_blank() -> io::Result<bool> {
-    if !assert_win::<&str>(1, &[], &[], "0")?  { return Ok(false) }
-    if !assert_win::<&str>(3, &[], &[], "0")?  { return Ok(false) }
-    if !assert_win::<&str>(8, &[], &[], "0")?  { return Ok(false) }
-    if !assert_win::<&str>(20, &[], &[], "0")? { return Ok(false) }
-    assert_win::<&str>(26, &[], &[], "0")
+fn test_no_win_blank(bot: Child, size: u8) {
+    let test = Test::<String, String> {
+        name: format!("No win on blank {}x{} board", size, size),
+        bot: bot,
+        board_size: size,
+        sety: vec![],
+        seto: vec![],
+        expected_out: "0\n".to_string(),
+        real_out: String::new(),
+    };
+
+    test.run("check_win");
 }
 
-fn test_white_win_small() -> io::Result<bool> {
-    let size = 3;
-    let set_white = ["a1", "a2", "a3"];
+fn test_white_win_small(bot: Child, is_white: bool) {
+    let mut test = Test {
+        name: "Identifies white win across one (top) row",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "a2", "a3"],
+        seto: vec![],
+        expected_out: format!("{}\n", if is_white { 1 } else { -1 }),
+        real_out: String::new(),
+    };
 
-    if unsafe { IS_WHITE } {
-        let expected = "1";
-        assert_win(size, &set_white, &[], expected)
-    } else {
-        let expected = "-1";
-        assert_win(size, &[], &set_white, expected)
-    }
+    if !is_white { std::mem::swap(&mut test.sety, &mut test.seto) }
+
+    test.run("check_win");
 }
 
-fn test_black_win_small() -> io::Result<bool> {
-    let size = 3;
-    let set_black = ["a1", "b1", "c1"];
+fn test_black_win_small(bot: Child, is_white: bool) {
+    let mut test = Test {
+        name: "Identifies white win across one (left) column",
+        bot: bot,
+        board_size: 3,
+        sety: vec!["a1", "b1", "c1"],
+        seto: vec![],
+        expected_out: format!("{}\n", if !is_white { 1 } else { -1 }),
+        real_out: String::new(),
+    };
 
-    if unsafe { IS_WHITE } {
-        let expected = "-1";
-        assert_win(size, &[], &set_black, expected)
-    } else {
-        let expected = "1";
-        assert_win(size, &set_black, &[], expected)
-    }
+    if is_white { std::mem::swap(&mut test.sety, &mut test.seto) }
+
+    test.run("check_win");
 }
 
-fn test_black_win_big() -> io::Result<bool> {
-    let size = 11;
-    let set_white = [];
-    let set_black = ["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11", "d11",
-        "e11", "f10", "g9", "h9", "i8", "j8", "j9", "j10", "j11", "k11"];
+fn test_black_win_big(bot: Child, is_white: bool) {
+    let mut test = Test {
+        name: "Identifies black win on a big board",
+        bot: bot,
+        board_size: 11,
+        sety: vec!["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11",
+            "d11", "e11", "f10", "g9", "h9", "i8", "j8", "j9", "j10", "j11", "k11"],
+        seto: vec![],
+        expected_out: format!("{}\n", if !is_white { 1 } else { -1 }),
+        real_out: String::new(),
+    };
 
-    if unsafe { IS_WHITE } {
-        let expected = "-1";
-        assert_win(size, &set_white, &set_black, expected)
-    } else {
-        let expected = "1";
-        assert_win(size, &set_black, &set_white, expected)
-    }
+    if is_white { std::mem::swap(&mut test.sety, &mut test.seto) }
+
+    test.run("check_win");
 }
 
 // TODO: Test "swap" command

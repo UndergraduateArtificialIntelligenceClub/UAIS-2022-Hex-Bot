@@ -2,12 +2,13 @@
 mod board;
 mod testing;
 
+use testing::BotTest;
+
 use std::process::{self, Command, Stdio};
 use std::io::{self, BufRead, Read, Write};
 use board::{Board, Tile};
 
 use std::path::PathBuf;
-
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -59,9 +60,8 @@ fn main() {
 
     match cli.command {
         Commands::Test { bot_path, bot_args, color } => {
-            if let Err(_) = testing::test_bot(color == Color::White, bot_path, &bot_args) {
-                println!("Oh no... something didn't work");
-            }
+            let mut bot_test = BotTest::new(color, bot_path, bot_args);
+            bot_test.test();
         }
         Commands::Matchup { size, white_bot, black_bot } => {
             println!("Board size: {}\nWhite: {:?}\nBlack:{:?}", size, white_bot, black_bot);
@@ -77,7 +77,7 @@ fn run_match() {
 
     for line in stdin.lock().lines().map(|l| l.unwrap()) {
         if "help" == line || "h" == line {
-            let _ = print_help();
+            ()
         } else if "exit" == line || "e" == line {
             println!("Shutdown NOW!");
             process::exit(0);
@@ -102,26 +102,6 @@ fn run_match() {
             println!("Unsupported command: `{}`", line);
         }
     }
-}
-
-fn print_help() -> io::Result<()>
-{
-    let mut wb = io::BufWriter::new(io::stdout());
-
-    wb.write_all(b">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")?;
-    write!(&mut wb, "UAIS Hex Bot Controller v{}\n", env!("CARGO_PKG_VERSION"))?;
-
-    wb.write_all(b"Supported commands:\n\t\
-        help    Print this help message\n\t\
-        run     TODO: Start the program. Optionally provide a save file argument\n\t\
-        next    TODO: Ask the bot for its next turn\n\t\
-        print   TODO: Print the board to stdout\n\t\
-        undo    TODO: As the bot to undo its last move\n\t\
-        save    TODO: Save game state into /tmp/uais_hex/<timestamp>.saved\n\t\
-        exit    TODO: Save game state and exit the program\n")?;
-
-    wb.write_all(b">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")?;
-    wb.flush()
 }
 
 fn play_round(bot_1_name: &str, bot_2_name: &str) -> io::Result<()>

@@ -49,5 +49,5 @@ cargo run --release -- test black ~/Documents/code/hex_bot/my_binary_executable 
 #cargo run --release -- matchup ../random_bot/main.py ~/Documents/code/hex_bot/my_binary_executable
 
 # You can also use the binary directly
-./target/release/sentience_validator test ../random_bot/main.py
+./target/release/sentience_validator test white ../random_bot/main.py -- -c white
 ```
