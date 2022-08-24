@@ -1,5 +1,4 @@
-# board elements
-EMPTY = 0
-WHITE = 1
-BLACK = 2
-BORDER = 3
+# These can be any numbers we want
+EMPTY = 10
+WHITE = 3
+BLACK = 4

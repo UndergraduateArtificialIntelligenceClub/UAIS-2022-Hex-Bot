@@ -1,5 +1,5 @@
 from multiprocessing.sharedctypes import Value
-from constants import BORDER, WHITE, BLACK, EMPTY
+from constants import EMPTY, WHITE, BLACK
 from random import choice, seed
 
 seed(42)  # Get same results temporarily
@@ -9,8 +9,8 @@ seed(42)  # Get same results temporarily
 class RandomHexBot:
     def __init__(self, color, board_size=11):
         self.color = color
-        self.move_count = 0
         self.opp = BLACK if color == WHITE else WHITE
+        self.move_count = 0
         self.init_board(board_size)
 
         self.pub = {
@@ -33,7 +33,7 @@ class RandomHexBot:
             "check_win": 0,
         }
 
-    def is_runnable(self, cmd):
+    def is_cmd(self, cmd):
         """Checks to see whether the command in 'cmd' conforms to the expected format
 
         Args:
@@ -83,8 +83,8 @@ class RandomHexBot:
         """
         tile_chars = {
             EMPTY: ".",
-            WHITE: "X",
-            BLACK: "O",
+            self.color: "X",
+            self.opp: "O",
         }
 
         chars = list(map(lambda x: tile_chars[x], self.board))

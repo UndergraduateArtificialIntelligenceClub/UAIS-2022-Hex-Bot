@@ -3,10 +3,16 @@ use std::process::{Child, Command, Stdio, ChildStdout};
 use std::path::PathBuf;
 use termion::{color, style};
 
+static mut IS_WHITE: bool = true;
 static mut BOT_PATH: Option<PathBuf> = None;
+static mut BOT_ARGS: Vec<String> = vec![];
 
-pub fn test_bot(bot_path: PathBuf) -> io::Result<()> {
-    unsafe { BOT_PATH = Some(bot_path) }
+pub fn test_bot(is_white: bool, bot_path: PathBuf, bot_args: &[String]) -> io::Result<()> {
+    unsafe {
+        IS_WHITE = is_white;
+        BOT_PATH = Some(bot_path);
+        BOT_ARGS = bot_args.to_vec();
+    }
 
     println!("Init board ==================================================");
     println!("`init_board {{n}}` must create an nxn blank board");
@@ -49,9 +55,9 @@ pub fn test_bot(bot_path: PathBuf) -> io::Result<()> {
     println!("Checking for a win ==========================================");
     println!("`check_win` prints 1 if you've won, -1 if the opponent won, 0 otherwise");
     test("Prints 0 for blank boards", test_no_win_blank()?);
-    test("Identifies your win across one row", test_row_win_yours_small()?);
-    test("Identifies opponent's win across one column", test_column_win_others_small()?);
-    test("Identifies your win on a big board", test_win_others_big()?);
+    test("Identifies white win across one row", test_white_win_small()?);
+    test("Identifies black win across one column", test_black_win_small()?);
+    test("Identifies black win on a big board", test_black_win_big()?);
 
     Ok(())
 }
@@ -79,6 +85,7 @@ fn test(name: &str, is_pass: bool) {
 fn get_bot() -> io::Result<Child> {
     unsafe {
         let bot = Command::new(BOT_PATH.as_ref().unwrap().as_os_str())
+            .args(&BOT_ARGS)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()?;
@@ -512,30 +519,45 @@ fn test_no_win_blank() -> io::Result<bool> {
     assert_win::<&str>(26, &[], &[], "0")
 }
 
-fn test_row_win_yours_small() -> io::Result<bool> {
+fn test_white_win_small() -> io::Result<bool> {
     let size = 3;
-    let sety = ["a1", "a2", "a3"];
-    let expected = "1";
+    let set_white = ["a1", "a2", "a3"];
 
-    assert_win(size, &sety, &[], expected)
+    if unsafe { IS_WHITE } {
+        let expected = "1";
+        assert_win(size, &set_white, &[], expected)
+    } else {
+        let expected = "-1";
+        assert_win(size, &[], &set_white, expected)
+    }
 }
 
-fn test_column_win_others_small() -> io::Result<bool> {
+fn test_black_win_small() -> io::Result<bool> {
     let size = 3;
-    let seto = ["a1", "b1", "c1"];
-    let expected = "-1";
+    let set_black = ["a1", "b1", "c1"];
 
-    assert_win(size, &[], &seto, expected)
+    if unsafe { IS_WHITE } {
+        let expected = "-1";
+        assert_win(size, &[], &set_black, expected)
+    } else {
+        let expected = "1";
+        assert_win(size, &set_black, &[], expected)
+    }
 }
 
-fn test_win_others_big() -> io::Result<bool> {
+fn test_black_win_big() -> io::Result<bool> {
     let size = 11;
-    let sety = [];
-    let seto = ["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11", "d11",
+    let set_white = [];
+    let set_black = ["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11", "d11",
         "e11", "f10", "g9", "h9", "i8", "j8", "j9", "j10", "j11", "k11"];
-    let expected = "-1";
 
-    assert_win(size, &sety, &seto, expected)
+    if unsafe { IS_WHITE } {
+        let expected = "-1";
+        assert_win(size, &set_white, &set_black, expected)
+    } else {
+        let expected = "1";
+        assert_win(size, &set_black, &set_white, expected)
+    }
 }
 
 // TODO: Test "swap" command
