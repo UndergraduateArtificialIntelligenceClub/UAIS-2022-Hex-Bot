@@ -9,8 +9,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description="Example hex bot that makes random valid placements")
-    parser.add_argument("-c", "--color", metavar="<COLOR>",
-                        choices=["white", "black"], required=True,
+    parser.add_argument("color", metavar="<COLOR>", choices=["white", "black"],
                         help="This bot's color. White is left->right")
     args = parser.parse_args()
 

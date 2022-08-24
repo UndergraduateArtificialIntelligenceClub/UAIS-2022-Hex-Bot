@@ -79,14 +79,6 @@ make_move
 quit
 ```
 
-**This section is undergoing reconsideration!!!**. In addition to all responses
-specified below, all messages sent to stdout by your bot **must** end with a
-single "=" on its own line. This signifies that all data has been transmitted
-and the central coordinator can transfer the data to the opponent. A message
-that does not terminate with "=" within a certain timespan will be used to
-denote an error having occurred, at which point the opponent will be declared
-the winner.
-
 | Message from central program | Response required from bot | Example | Internal state |
 | ---------------------------- | -------------------------- | ------- | -------------- |
 | `init_board` | None | None | Reset the board and move counters |
@@ -95,14 +87,15 @@ the winner.
 | `sety {}` | None | None | Set the coordinate as the your tile on your board |
 | `unset {}` | None | None | Set the coordinate as an unmarked tile on your board |
 | `quit` | Exit code 0 | None | Run destructors and shutdown program, preferably with exit code 0 |
-| Anything | The bot sees a message as invalid | `error` | Don't change anything |
-
-`sety` and `unset` provide a way to save the game. They won't be used in the
-normal course of play otherwise.
-
-A bot may respond with `error` when the requested operation conflicts with its
-internal logic. For example, if a1 is set to your tile and the bot receives
-`seto a1`. It is not necessary to implement this, you could just overwrite a1,
-though it may help catch errors faster if the bots become desynchronized
 
 [Database](http://hex.kosmanor.com/hex-bin/board/10/en_US:0/)
+
+# Taking sides
+Your bot must take in exactly 1 positional argument, either "black" or "white".
+These will tell your bot which side it's playing on. See the random_bot for a
+python3 example
+
+The black player wins when they have an uninterrupted path from top to bottom.
+For example, they could have filled 1 column with their tiles. The white player
+wins when they have an uninterrupted path from left to right, like a row filled
+with their tiles

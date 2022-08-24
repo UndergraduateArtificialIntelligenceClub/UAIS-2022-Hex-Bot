@@ -25,15 +25,12 @@ struct Cli {
 enum Commands {
     /// Run all tests on a bot
     Test {
-        /// Color of bot on this test
-        #[clap(action)]
-        color: Color,
         /// Path to the main executable for the bot
         #[clap(action)]
         bot_path: PathBuf,
-        /// String of arguments to pass to the bot
+        /// Color of bot on this test
         #[clap(action)]
-        bot_args: Vec<String>,
+        color: Color,
     },
     /// Let two bots face off in hex
     Matchup {
@@ -59,8 +56,8 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Test { bot_path, bot_args, color } => {
-            let mut bot_test = BotTest::new(color, bot_path, bot_args);
+        Commands::Test { bot_path, color } => {
+            let mut bot_test = BotTest::new(color, bot_path);
             bot_test.test();
         }
         Commands::Matchup { size, white_bot, black_bot } => {

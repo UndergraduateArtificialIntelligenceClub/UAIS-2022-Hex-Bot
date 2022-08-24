@@ -8,12 +8,11 @@ use super::Color;
 pub struct BotTest {
     color: Color,
     bot_path: PathBuf,
-    bot_args: Vec<String>,
 }
 
 impl BotTest {
-    pub fn new(color: Color, bot_path: PathBuf, bot_args: Vec<String>) -> Self {
-        Self { color, bot_path, bot_args }
+    pub fn new(color: Color, bot_path: PathBuf) -> Self {
+        Self { color, bot_path }
     }
 
     pub fn test(&mut self) {
@@ -67,7 +66,7 @@ impl BotTest {
     // Starts up a new bot
     fn get_bot(&self) -> Child {
         Command::new(&self.bot_path)
-            .args(&self.bot_args)
+            .arg(self.color_str())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
@@ -76,6 +75,14 @@ impl BotTest {
 
     fn is_white(&self) -> bool {
         self.color == Color::White
+    }
+
+    fn color_str(&self) -> &str {
+        if self.is_white() {
+            "white"
+        } else {
+            "black"
+        }
     }
 
     // `unset` has to be tested very manually...
