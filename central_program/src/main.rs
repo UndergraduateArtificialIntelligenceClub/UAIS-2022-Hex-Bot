@@ -4,7 +4,7 @@ mod testing;
 
 use testing::BotTest;
 
-use std::process::{self, Command, Stdio};
+use std::process::{self, Command, Stdio, Child};
 use std::io::{self, BufRead, Read, Write};
 use board::{Board, Tile};
 
@@ -61,44 +61,50 @@ fn main() {
             bot_test.test();
         }
         Commands::Matchup { size, white_bot, black_bot } => {
-            println!("Board size: {}\nWhite: {:?}\nBlack:{:?}", size, white_bot, black_bot);
-            todo!();
+            let white = spawn_bot(white_bot, "white");
+            let black = spawn_bot(black_bot, "black");
+            run_match(size, white, black);
         }
     }
 }
 
-fn run_match() {
-    todo!();
-    // Repl
+fn spawn_bot(bot_path: PathBuf, color: &str) -> Child {
+        Command::new(bot_path)
+        .arg(color)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to startup bot")
+}
+
+fn run_match(size: u8, mut white: Child, mut black: Child) {
+    let mut board = Board::new(size);
+
     let stdin = io::stdin();
 
     for line in stdin.lock().lines().map(|l| l.unwrap()) {
         if "help" == line || "h" == line {
-            ()
-        } else if "exit" == line || "e" == line {
-            println!("Shutdown NOW!");
+            print_repl_help();
+        } else if "exit" == line {
+            println!("Shutting down");
             process::exit(0);
         } else if "run" == line || "r" == line {
-            let mut board = Board::new(4, 4);
-
-            // TODO: Remove. This is to demo the display capabilities
-            board.set(0,0, Tile::Red);
-            board.set(1,1, Tile::Red);
-            board.set(2,2, Tile::Red);
-            board.set(3,3, Tile::Red);
-
-            board.set(3,0, Tile::Blue);
-            board.set(3,2, Tile::Blue);
-            board.set(1,2, Tile::Blue);
-
-            println!("{}", board);
-
-            //play_round(&bot_1, &bot_2)
-            //    .expect("Something went wrong");
+            todo!();
         } else {
-            println!("Unsupported command: `{}`", line);
+            println!("Command `{}` not found. See \"help\" for a list of commands", line);
         }
     }
+}
+
+fn print_repl_help() {
+    println!("{}", [
+        "==== Sentience Validator: Interactive REPL ====",
+        "Command     Description",
+        "h | help    Prints this help menu",
+        "n | next    Prompts the bot for its next move",
+        "exit        Shuts down both bots and exits",
+        "==========================================",
+    ].join("\n"));
 }
 
 fn play_round(bot_1_name: &str, bot_2_name: &str) -> io::Result<()>

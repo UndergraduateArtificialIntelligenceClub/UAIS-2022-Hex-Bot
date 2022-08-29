@@ -44,11 +44,8 @@ only. For example `next` and `n` map to the same command
 | Cmd | Effect |
 | --- | ------ |
 | `run` | Starts up both bots with the `init_board` message |
-| `run {file}` | Performs identical function to `run`, though also parses commands in `file`. Essentially loads a state.|
 | `next` | Messages and receives a move from the next bot |
 | `print` | Prints out the current board |
-| `undo` | Undo the last move. May be useful for debugging |
-| `save` | Back up the current game's state. Can be used for manual debugging |
 
 # Communication Protocol
 We'll be keeping things simple and use stdin/stdout messaging. Your bot must

@@ -1,9 +1,9 @@
-// Red is at the top/bottom. Blue is at the left/right
+// Black goes top -> bottom. White goes left -> right
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tile {
-    Red,
-    Blue,
+    Black,
     Empty,
+    White,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -15,55 +15,51 @@ enum DFS {
 
 #[derive(Debug)]
 pub struct Board {
-    rows: isize,
-    cols: isize,
+    size: usize,
     board: Vec<Tile>,
 }
 
 impl Board {
-    pub fn new(height: isize, width: isize) -> Self {
+    pub fn new(size: u8) -> Self {
         Self {
-            // Row major storage
-            rows: height,
-            cols: width,
-            board: vec![Tile::Empty; (height * width) as usize],
+            size: size as usize,
+            board: vec![Tile::Empty; size.pow(2) as usize],
         }
     }
 
-    pub fn get(&self, row: isize, col: isize) -> Option<Tile> {
-        let index = self.coord_to_index(row, col)?;
+    pub fn get(&self, row: usize, col: usize) -> Option<Tile> {
+        let index = self.coord_to_index(row, col);
         Some(self.board[index])
     }
 
     // Sets a tile to the given color
-    pub fn set(&mut self, row: isize, col: isize, color: Tile) -> Option<()> {
-        let index = self.coord_to_index(row, col)?;
+    pub fn set(&mut self, row: usize, col: usize, color: Tile) -> Option<()> {
+        let index = self.coord_to_index(row, col);
         self.board[index] = color;
         Some(())
     }
 
     // Returns an array of all indicies adjacent to a given hex. That's 2-5 indicies
-    fn get_adj(&self, r: isize, c: isize) -> Vec<usize> {
+    fn get_adj(&self, row: usize, column: usize) -> Vec<usize> {
+        let r = row as isize;
+        let c = column as isize;
+        let s = self.size as isize;
+
         let a = [(r, c-1), (r+1, c-1), (r-1, c), (r+1, c), (r-1, c+1), (r, c+1)];
 
         a.into_iter()
-            .filter_map(|(r, c)| self.coord_to_index(r, c))
+            .filter(|(r, c)| 0 <= *r && *r < s && 0 <= *c && *c < s)
+            .map(|(r, c)| self.coord_to_index(r as usize, c as usize))
             .collect()
     }
 
-    fn coord_to_index(&self, r: isize, c: isize) -> Option<usize> {
-        if r < 0 || c < 0 || r >= self.rows || c >= self.cols {
-            None
-        } else {
-            Some((r * self.cols + c) as usize)
-        }
+    fn coord_to_index(&self, r: usize, c: usize) -> usize {
+        r * self.size + c
     }
 
-    fn index_to_coord(&self, i: usize) -> Option<(isize, isize)> {
-        let i = i as isize;
-
-        if 0 <= i && i < self.board.len() as isize {
-            Some((i / self.cols as isize, i % self.cols as isize))
+    fn index_to_coord(&self, i: usize) -> Option<(usize, usize)> {
+        if i < self.board.len() {
+            Some((i / self.size, i % self.size))
         } else {
             None
         }
@@ -71,28 +67,27 @@ impl Board {
 
     // Returns the color of the player who won, empty otherwise
     pub fn has_win(&self) -> Tile {
-        if self.is_red_win() {
-            Tile::Red
-        } else if self.is_blue_win() {
-            Tile::Blue
+        if self.is_black_win() {
+            Tile::Black
+        } else if self.is_white_win() {
+            Tile::White
         } else {
             Tile::Empty
         }
     }
 
-    fn is_red_win(&self) -> bool {
-        let mut dfs_tree = vec![DFS::Unvisited; (self.rows * self.cols) as usize];
+    fn is_black_win(&self) -> bool {
+        let mut dfs_tree = vec![DFS::Unvisited; self.size.pow(2)];
 
-        for start_col in 0..self.cols {
-            let start = self.coord_to_index(0, start_col).unwrap();
+        for start_col in 0..self.size {
+            let start = self.coord_to_index(0, start_col);
 
-            if self.board[start] == Tile::Red && dfs_tree[start] == DFS::Unvisited {
+            if self.board[start] == Tile::Black && dfs_tree[start] == DFS::Unvisited {
                 for adj in self.get_adj(0, start_col).into_iter() {
-                    if self.board[adj] == Tile::Red {
+                    if self.board[adj] == Tile::Black {
                         dfs_tree[start] = DFS::Visited;
 
-                        if self.has_path(adj, Tile::Red, &mut dfs_tree) {
-                            //eprintln!("{} -> {}", start, adj);
+                        if self.has_path(adj, Tile::Black, &mut dfs_tree) {
                             return true;
                         }
                     }
@@ -102,19 +97,18 @@ impl Board {
         false
     }
 
-    fn is_blue_win(&self) -> bool {
-        let mut dfs_tree = vec![DFS::Unvisited; (self.rows * self.cols) as usize];
+    fn is_white_win(&self) -> bool {
+        let mut dfs_tree = vec![DFS::Unvisited; self.size.pow(2)];
 
-        for start_row in 0..self.rows {
-            let start = self.coord_to_index(start_row, 0).unwrap();
+        for start_row in 0..self.size {
+            let start = self.coord_to_index(start_row, 0);
 
-            if self.board[start] == Tile::Blue && dfs_tree[start] == DFS::Unvisited {
+            if self.board[start] == Tile::White && dfs_tree[start] == DFS::Unvisited {
                 for adj in self.get_adj(start_row, 0).into_iter() {
-                    if self.board[adj] == Tile::Blue {
+                    if self.board[adj] == Tile::White {
                         dfs_tree[start] = DFS::Visited;
 
-                        if self.has_path(adj, Tile::Blue, &mut dfs_tree) {
-                            //eprintln!("{} -> {}", start, adj);
+                        if self.has_path(adj, Tile::White, &mut dfs_tree) {
                             return true;
                         }
                     }
@@ -127,7 +121,7 @@ impl Board {
     fn has_path(&self, from: usize, color: Tile, dfs_tree: &mut Vec<DFS>) -> bool {
         let (r, c) = self.index_to_coord(from).unwrap();
 
-        if color == Tile::Blue && c == self.cols - 1 || color == Tile::Red && r == self.rows - 1 {
+        if color == Tile::White && c == self.size - 1 || color == Tile::Black && r == self.size - 1 {
             return true;
         }
 
@@ -135,7 +129,6 @@ impl Board {
         for adj in self.get_adj(r, c).into_iter() {
             if dfs_tree[adj] == DFS::Unvisited && self.board[adj] == color {
                 if self.has_path(adj, color, dfs_tree) {
-                    //eprintln!("{} -> {}", from, adj);
                     return true;
                 }
             }
@@ -146,27 +139,27 @@ impl Board {
 
 impl std::fmt::Display for Board {
     // Example output:
-    // X . . .
-    //  . X O .
-    //   . . X .
-    //    O . O X
+    // B . . .
+    //  . B W .
+    //   . . B .
+    //    W . W B
     // ---------------
-    // Red: X, Blue: O
+    // Black: B, White: W
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for r in 0..self.rows {
-            write!(f, "{}", " ".repeat(r as usize))?;
+        for r in 0..self.size {
+            write!(f, "{}", " ".repeat(r))?;
 
-            for c in 0..self.cols {
-                match self.board[self.coord_to_index(r, c).unwrap()] {
-                    Tile::Red => write!(f, "X ")?,
-                    Tile::Blue => write!(f, "O ")?,
+            for c in 0..self.size {
+                match self.board[self.coord_to_index(r, c)] {
+                    Tile::Black => write!(f, "B ")?,
+                    Tile::White => write!(f, "W ")?,
                     Tile::Empty => write!(f, ". ")?,
                 }
             }
             write!(f, "\n")?;
         }
 
-        write!(f, "{}\nRed: X, Blue: O", "-".repeat(15))
+        write!(f, "{}\nBlack: B, White: W", "-".repeat(15))
     }
 }
 
@@ -176,7 +169,7 @@ mod board_testing {
 
     #[test]
     fn setters_getters() {
-        let mut board = Board::new(4,4);
+        let mut board = Board::new(4);
 
         for r in 0..4 {
             for c in 0..4 {
@@ -184,11 +177,11 @@ mod board_testing {
             }
         }
 
-        board.set(0,3, Tile::Blue);
-        assert_eq!(board.get(0,3), Some(Tile::Blue));
+        board.set(0,3, Tile::White);
+        assert_eq!(board.get(0,3), Some(Tile::White));
 
-        board.set(3,2, Tile::Red);
-        assert_eq!(board.get(3,2), Some(Tile::Red));
+        board.set(3,2, Tile::Black);
+        assert_eq!(board.get(3,2), Some(Tile::Black));
 
         board.set(3,2, Tile::Empty);
         assert_eq!(board.get(3,2), Some(Tile::Empty));
@@ -196,7 +189,7 @@ mod board_testing {
 
     #[test]
     fn adjacent_tiles() {
-        let mut board = Board::new(4,5);
+        let mut board = Board::new(5);
         {
             let r = 2; let c = 2;
 
@@ -214,10 +207,10 @@ mod board_testing {
             assert_eq!(adjs.iter().sum::<usize>(), expected.iter().sum::<usize>());
         }
         {
-            let r = 3; let c = 4;
+            let r = 4; let c = 4;
 
             let mut adjs = board.get_adj(r, c);
-            let mut expected = vec![14, 18];
+            let mut expected = vec![19, 23];
 
             assert_eq!(adjs.iter().sum::<usize>(), expected.iter().sum::<usize>());
         }
@@ -225,30 +218,30 @@ mod board_testing {
 
     #[test]
     fn drawing() {
-        let mut board = Board::new(4,4);
+        let mut board = Board::new(4);
 
-        board.set(0,0, Tile::Red);
-        board.set(1,1, Tile::Red);
-        board.set(2,2, Tile::Red);
-        board.set(3,3, Tile::Red);
+        board.set(0,0, Tile::Black);
+        board.set(1,1, Tile::Black);
+        board.set(2,2, Tile::Black);
+        board.set(3,3, Tile::Black);
 
-        board.set(3,0, Tile::Blue);
-        board.set(3,2, Tile::Blue);
-        board.set(1,2, Tile::Blue);
+        board.set(3,0, Tile::White);
+        board.set(3,2, Tile::White);
+        board.set(1,2, Tile::White);
 
-        let expected = "X . . . \n . X O . \n  . . X . \n   O . O X \n\
+        let expected = "B . . . \n . B W . \n  . . B . \n   W . W B \n\
             ---------------\n\
-            Red: X, Blue: O";
+            Black: B, White: W";
 
         assert_eq!(format!("{}", board), expected);
 
-        board.set(0,1, Tile::Red);
-        board.set(0,2, Tile::Red);
-        board.set(0,3, Tile::Red);
+        board.set(0,1, Tile::Black);
+        board.set(0,2, Tile::Black);
+        board.set(0,3, Tile::Black);
 
-        let expected2 = "X X X X \n . X O . \n  . . X . \n   O . O X \n\
+        let expected2 = "B B B B \n . B W . \n  . . B . \n   W . W B \n\
             ---------------\n\
-            Red: X, Blue: O";
+            Black: B, White: W";
 
         assert_eq!(format!("{}", board), expected2);
     }
@@ -256,73 +249,72 @@ mod board_testing {
     #[test]
     fn check_win() {
         {
-            let mut board = Board::new(4,4);
-            board.set(0,0, Tile::Blue);
-            board.set(0,1, Tile::Blue);
-            board.set(0,2, Tile::Blue);
-            board.set(0,3, Tile::Blue);
+            let mut board = Board::new(4);
+            board.set(0,0, Tile::White);
+            board.set(0,1, Tile::White);
+            board.set(0,2, Tile::White);
+            board.set(0,3, Tile::White);
 
-            assert_eq!(board.has_win(), Tile::Blue);
+            assert_eq!(board.has_win(), Tile::White);
         }
         {
-            let mut board = Board::new(4,4);
-            board.set(0,0, Tile::Red);
-            board.set(1,0, Tile::Red);
-            board.set(2,0, Tile::Red);
-            board.set(3,0, Tile::Red);
+            let mut board = Board::new(4);
+            board.set(0,0, Tile::Black);
+            board.set(1,0, Tile::Black);
+            board.set(2,0, Tile::Black);
+            board.set(3,0, Tile::Black);
 
-            assert_eq!(board.has_win(), Tile::Red);
+            assert_eq!(board.has_win(), Tile::Black);
         }
         {
-            let mut board = Board::new(4,4);
-            board.set(0,0, Tile::Red);
-            board.set(0,1, Tile::Red);
-            board.set(0,2, Tile::Red);
-            board.set(0,3, Tile::Red);
+            let mut board = Board::new(4);
+            board.set(0,0, Tile::Black);
+            board.set(0,1, Tile::Black);
+            board.set(0,2, Tile::Black);
+            board.set(0,3, Tile::Black);
 
-            board.set(1,0, Tile::Blue);
-            board.set(2,0, Tile::Blue);
-            board.set(3,0, Tile::Blue);
+            board.set(1,0, Tile::White);
+            board.set(2,0, Tile::White);
+            board.set(3,0, Tile::White);
 
             assert_eq!(board.has_win(), Tile::Empty);
         }
         {
-            let mut board = Board::new(4,4);
-            board.set(2,0, Tile::Blue);
-            board.set(2,1, Tile::Blue);
-            board.set(1,2, Tile::Blue);
-            board.set(0,3, Tile::Blue);
+            let mut board = Board::new(4);
+            board.set(2,0, Tile::White);
+            board.set(2,1, Tile::White);
+            board.set(1,2, Tile::White);
+            board.set(0,3, Tile::White);
 
-            board.set(1,1, Tile::Red);
-            board.set(2,2, Tile::Red);
-            board.set(1,3, Tile::Red);
-            board.set(3,2, Tile::Red);
+            board.set(1,1, Tile::Black);
+            board.set(2,2, Tile::Black);
+            board.set(1,3, Tile::Black);
+            board.set(3,2, Tile::Black);
 
-            assert_eq!(board.has_win(), Tile::Blue);
+            assert_eq!(board.has_win(), Tile::White);
         }
         {
-            let mut board = Board::new(4,5);
-            board.set(3,0, Tile::Blue);
-            board.set(2,1, Tile::Blue);
-            board.set(1,2, Tile::Blue);
-            board.set(0,3, Tile::Blue);
-            board.set(1,3, Tile::Blue);
-            board.set(2,3, Tile::Blue);
-            board.set(3,3, Tile::Blue);
-            board.set(3,4, Tile::Blue);
+            let mut board = Board::new(4);
+            board.set(3,0, Tile::White);
+            board.set(2,1, Tile::White);
+            board.set(1,2, Tile::White);
+            board.set(0,3, Tile::White);
+            board.set(1,3, Tile::White);
+            board.set(2,3, Tile::White);
+            board.set(3,3, Tile::White);
 
-            board.set(1,1, Tile::Red);
-            board.set(3,2, Tile::Red);
-            board.set(0,0, Tile::Red);
-            board.set(0,1, Tile::Red);
-            board.set(1,1, Tile::Red);
-            board.set(2,0, Tile::Red);
-            board.set(3,1, Tile::Red);
+            board.set(1,1, Tile::Black);
+            board.set(3,2, Tile::Black);
+            board.set(0,0, Tile::Black);
+            board.set(0,1, Tile::Black);
+            board.set(1,1, Tile::Black);
+            board.set(2,0, Tile::Black);
+            board.set(3,1, Tile::Black);
 
-            assert_eq!(board.has_win(), Tile::Blue);
+            assert_eq!(board.has_win(), Tile::White);
 
-            board.set(2,1, Tile::Red);
-            assert_eq!(board.has_win(), Tile::Red);
+            board.set(2,1, Tile::Black);
+            assert_eq!(board.has_win(), Tile::Black);
 
             board.set(2,1, Tile::Empty);
             assert_eq!(board.has_win(), Tile::Empty);
