@@ -43,9 +43,12 @@ only. For example `next` and `n` map to the same command
 
 | Cmd | Effect |
 | --- | ------ |
-| `run` | Starts up both bots with the `init_board` message |
+| `help` | Prints a helpful ;) message |
 | `next` | Messages and receives a move from the next bot |
-| `print` | Prints out the current board |
+| `show` | Shows the central board |
+| `showall` | Shows the internal board of each bot and the central board |
+| `check` | Checks if a bot has won |
+| `quit` | Shuts down both bots |
 
 # Communication Protocol
 We'll be keeping things simple and use stdin/stdout messaging. Your bot must

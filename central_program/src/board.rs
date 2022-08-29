@@ -6,6 +6,16 @@ pub enum Tile {
     White,
 }
 
+impl std::fmt::Display for Tile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            Self::Black => write!(f, "Black"),
+            Self::White => write!(f, "White"),
+            Self::Empty => write!(f, "Empty"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum DFS {
     Visited,
@@ -27,17 +37,59 @@ impl Board {
         }
     }
 
+    // Create board from bot output string. Ex: "...|B.B|.W.|"
+    pub fn from(compressed: &str) -> Self {
+        let board = compressed.trim()
+            .chars()
+            .filter(|&c| c != '|')
+            .map(|c| {
+                match c {
+                    'X' => Tile::Black,
+                    'O' => Tile::White,
+                    '.' => Tile::Empty,
+                    _ => panic!("Incorrect bot output character`{}`", c),
+                }
+            })
+            .collect::<Vec<Tile>>();
+
+        Self {
+            size: (board.len() as f64).sqrt() as usize,
+            board,
+        }
+    }
+
     pub fn get(&self, row: usize, col: usize) -> Option<Tile> {
         let index = self.coord_to_index(row, col);
         Some(self.board[index])
     }
 
     // Sets a tile to the given color
-    pub fn set(&mut self, row: usize, col: usize, color: Tile) -> Option<()> {
+    pub fn set(&mut self, row: usize, col: usize, color: Tile) {
         let index = self.coord_to_index(row, col);
-        self.board[index] = color;
-        Some(())
+        self.board[index] = color
     }
+
+    pub fn set_move(&mut self, mv: &str, color: Tile) {
+        let index = self.move_to_index(mv);
+        self.board[index] = color
+    }
+
+    // Returns true when the specified tile is empty
+    pub fn is_valid_move(&self, mv: &str) -> bool {
+        self.board[self.move_to_index(mv)] == Tile::Empty
+    }
+
+    // Returns the color of the player who won, empty otherwise
+    pub fn has_win(&self) -> Tile {
+        if self.is_black_win() {
+            Tile::Black
+        } else if self.is_white_win() {
+            Tile::White
+        } else {
+            Tile::Empty
+        }
+    }
+
 
     // Returns an array of all indicies adjacent to a given hex. That's 2-5 indicies
     fn get_adj(&self, row: usize, column: usize) -> Vec<usize> {
@@ -65,15 +117,12 @@ impl Board {
         }
     }
 
-    // Returns the color of the player who won, empty otherwise
-    pub fn has_win(&self) -> Tile {
-        if self.is_black_win() {
-            Tile::Black
-        } else if self.is_white_win() {
-            Tile::White
-        } else {
-            Tile::Empty
-        }
+    // Converts a move (ex: "a1") to the board's index
+    fn move_to_index(&self, mv: &str) -> usize {
+        let r = mv.chars().nth(0).unwrap() as usize - 97;  // First letter
+        let c = &mv[1..].parse::<usize>().unwrap() - 1;    // All following digits
+
+        self.coord_to_index(r, c)
     }
 
     fn is_black_win(&self) -> bool {
@@ -143,8 +192,7 @@ impl std::fmt::Display for Board {
     //  . B W .
     //   . . B .
     //    W . W B
-    // ---------------
-    // Black: B, White: W
+    // ------------------
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for r in 0..self.size {
             write!(f, "{}", " ".repeat(r))?;
@@ -159,7 +207,7 @@ impl std::fmt::Display for Board {
             write!(f, "\n")?;
         }
 
-        write!(f, "{}\nBlack: B, White: W", "-".repeat(15))
+        write!(f, "{}", "-".repeat(18))
     }
 }
 
