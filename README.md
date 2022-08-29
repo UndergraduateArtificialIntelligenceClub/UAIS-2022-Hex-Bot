@@ -70,7 +70,7 @@ immediate loss, so don't try to cheat
 
 Example message sequence:
 ```
-init_board
+init_board 11
 make_move
 seto a1
 make_move
