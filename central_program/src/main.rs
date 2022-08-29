@@ -52,6 +52,15 @@ pub enum Color {
     White,
 }
 
+impl Color {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Black => "B",
+            Self::White => "W",
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -63,6 +72,7 @@ fn main() {
         Commands::Matchup { size, black_bot, white_bot } => {
             let black = spawn_bot(black_bot, "black");
             let white = spawn_bot(white_bot, "white");
+            print_repl_help();
             run_match(size, black, white);
         }
     }
@@ -74,6 +84,7 @@ fn print_repl_help() {
         "Command      Description",
         "h | help     Prints this help menu",
         "n | next     Prompts the bot for its next move",
+        "run {}       Plays {} turns sequentially",
         "s | show     Shows the central board",
         "S | showall  Shows both the bots' boards and the central one",
         "c | check    Checks if a bot has won",
@@ -110,25 +121,13 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
             todo!();
             process::exit(0);
         } else if "next" == line || "n" == line {
-            let (this_turn_bot, next_turn_bot, this_turn_color) = if is_black_turn {
-                (&mut black, &mut white, Tile::Black)
-            } else {
-                (&mut white, &mut black, Tile::White)
-            };
-
-            let response = get_response(this_turn_bot, "make_move");
-            let mv = response.trim();
-
-            if board.is_valid_move(&mv) {
-                println!("{}'s move: {}", this_turn_color, mv);
-                board.set_move(mv, this_turn_color);
-                send_message(next_turn_bot, &format!("seto {}\n", mv));
-            } else {
-                println!("Black bot returned invalid move `{}`!", mv);
-                todo!();
-            }
-
+            play_turn(is_black_turn, &mut board, &mut black, &mut white);
             is_black_turn = !is_black_turn;
+        } else if line.len() >= 5 && "run " == &line[..4] && line[4..].parse::<usize>().is_ok() {
+            for _ in 0..line[4..].parse::<usize>().unwrap() {
+                play_turn(is_black_turn, &mut board, &mut black, &mut white);
+                is_black_turn = !is_black_turn;
+            }
         } else {
             println!("Command `{}` not found. See \"help\" for a list of commands", line);
         }
@@ -168,4 +167,24 @@ fn init_board(size: u8, black: &mut Child, white: &mut Child) {
 fn print_bot_board(bot: &mut Child, color: Tile) {
     let response = get_response(bot, "show_board");
     println!("{} board ------------------\n{}", color, Board::from(&response));
+}
+
+fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &mut Child) {
+    let (this_turn_bot, next_turn_bot, this_turn_color) = if is_black_turn {
+        (black, white, Tile::Black)
+    } else {
+        (white, black, Tile::White)
+    };
+
+    let response = get_response(this_turn_bot, "make_move");
+    let mv = response.trim();
+
+    if board.is_valid_move(&mv) {
+        println!("{}'s move: {}", this_turn_color, mv);
+        board.set_move(mv, this_turn_color);
+        send_message(next_turn_bot, &format!("seto {}\n", mv));
+    } else {
+        println!("Black bot returned invalid move `{}`!", mv);
+        todo!();
+    }
 }

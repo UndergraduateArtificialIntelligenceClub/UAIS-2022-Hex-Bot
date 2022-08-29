@@ -16,6 +16,9 @@ impl BotTest {
     }
 
     pub fn test(&mut self) {
+        let (own_color, other_color) =
+            if self.color == Color::Black { ("B", "W") } else { ("W", "B") };
+
         println!("Init board ==================================================");
         println!("`init_board {{n}}` must create an nxn blank board");
         test_init_board(self.get_bot(), 1);
@@ -27,29 +30,29 @@ impl BotTest {
 
         println!("Set your tile ===============================================");
         println!("`sety {{coord}}` sets your tile, X, at the given coordinate");
-        test_set_yours_a1(self.get_bot());
-        test_set_yours_c8(self.get_bot());
-        test_set_yours_all_rows(self.get_bot());
-        test_set_yours_fill(self.get_bot());
-        test_set_yours_twice_on_same_spot(self.get_bot());
-        test_set_yours_diagonal(self.get_bot());
-        test_set_yours_big_diagonal(self.get_bot());
-        test_set_yours_big_fill(self.get_bot());
+        test_set_yours_a1(self.get_bot(), own_color);
+        test_set_yours_c8(self.get_bot(), own_color);
+        test_set_yours_all_rows(self.get_bot(), own_color);
+        test_set_yours_fill(self.get_bot(), own_color);
+        test_set_yours_twice_on_same_spot(self.get_bot(), own_color);
+        test_set_yours_diagonal(self.get_bot(), own_color);
+        test_set_yours_big_diagonal(self.get_bot(), own_color);
+        test_set_yours_big_fill(self.get_bot(), own_color);
 
         println!("Set other player's tile =====================================");
         println!("`seto {{coord}}` sets the other player's tile, O, at the given coordinate");
-        test_set_others_a1(self.get_bot());
-        test_set_others_c8(self.get_bot());
-        test_set_others_all_rows(self.get_bot());
-        test_set_others_fill(self.get_bot());
-        test_set_others_diagonal(self.get_bot());
-        test_set_others_twice_on_same_spot(self.get_bot());
-        test_set_others_big_diagonal(self.get_bot());
-        test_set_others_big_fill(self.get_bot());
+        test_set_others_a1(self.get_bot(), other_color);
+        test_set_others_c8(self.get_bot(), other_color);
+        test_set_others_all_rows(self.get_bot(), other_color);
+        test_set_others_fill(self.get_bot(), other_color);
+        test_set_others_diagonal(self.get_bot(), other_color);
+        test_set_others_twice_on_same_spot(self.get_bot(), other_color);
+        test_set_others_big_diagonal(self.get_bot(), other_color);
+        test_set_others_big_fill(self.get_bot(), other_color);
 
         println!("Unsetting tiles =============================================");
         println!("`unset {{coord}}` clears any tile at that coordinate");
-        self.test_unset_tiles();
+        self.test_unset_tiles(own_color, other_color);
 
         println!("Checking for a win ==========================================");
         println!("`check_win` prints 1 if you've won, -1 if the opponent won, 0 otherwise");
@@ -86,7 +89,7 @@ impl BotTest {
     }
 
     // `unset` has to be tested very manually...
-    fn test_unset_tiles(&self) {
+    fn test_unset_tiles(&self, x: &str, o: &str) {
         let mut bot = self.get_bot();
         let bot_out = bot.stdout.as_mut().unwrap();
         let bot_in = bot.stdin.as_mut().unwrap();
@@ -112,7 +115,9 @@ impl BotTest {
 
         reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
 
-        pretty_print_result("Unset your a1", "X.OO|....|....|OOXX|\n", &real_out);
+        pretty_print_result("Unset your a1",
+            &"X.OO|....|....|OOXX|\n".replace("X", x).replace("O", o),
+            &real_out);
         real_out.clear();
 
         write!(bot_in, "unset a3\nunset d2\nunset d3\nshow_board\n")
@@ -120,7 +125,9 @@ impl BotTest {
 
         reader.read_line(&mut real_out).expect("Unset tiles: Failed to output");
 
-        pretty_print_result("Unset yours and opponent's tiles", "X..O|....|....|O..X|\n", &real_out);
+        pretty_print_result("Unset yours and opponent's tiles",
+            &"X..O|....|....|O..X|\n".replace("X", x).replace("O", o)
+            , &real_out);
         real_out.clear();
 
         write!(bot_in, "unset a1\nunset a4\nunset d1\nunset d4\nshow_board\n")
@@ -263,21 +270,21 @@ fn test_init_board(bot: Child, size: u8) {
 // Only a single letter is allowed, followed by up to 2 digits. No need to implement anything over
 // board size 26x26. Note that the coordinates ARE 1 indexed
 
-fn test_set_yours_a1(bot: Child) {
+fn test_set_yours_a1(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tile on a1",
         bot: bot,
         board_size: 3,
         sety: vec!["a1"],
         seto: vec![],
-        expected_out: "X..|...|...|\n".to_string(),
+        expected_out: "X..|...|...|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_c8(bot: Child) {
+fn test_set_yours_c8(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tile on c8",
         bot: bot,
@@ -294,70 +301,70 @@ fn test_set_yours_c8(bot: Child) {
             ..........|\
             ..........|\
             ..........|\
-            ..........|\n".to_string(),
+            ..........|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_all_rows(bot: Child) {
+fn test_set_yours_all_rows(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles on first column",
         bot: bot,
         board_size: 3,
         sety: vec!["a1", "b1", "c1"],
         seto: vec![],
-        expected_out: "X..|X..|X..|\n".to_string(),
+        expected_out: "X..|X..|X..|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_fill(bot: Child) {
+fn test_set_yours_fill(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles on every spot",
         bot: bot,
         board_size: 3,
         sety: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
         seto: vec![],
-        expected_out: "XXX|XXX|XXX|\n".to_string(),
+        expected_out: "XXX|XXX|XXX|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_diagonal(bot: Child) {
+fn test_set_yours_diagonal(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles diagonally",
         bot: bot,
         board_size: 3,
         sety: vec!["a1", "b2", "c3"],
         seto: vec![],
-        expected_out: "X..|.X.|..X|\n".to_string(),
+        expected_out: "X..|.X.|..X|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_twice_on_same_spot(bot: Child) {
+fn test_set_yours_twice_on_same_spot(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own twice on same spot",
         bot: bot,
         board_size: 3,
         sety: vec!["a1", "a1", "c3"],
         seto: vec![],
-        expected_out: "X..|...|..X|\n".to_string(),
+        expected_out: "X..|...|..X|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_big_diagonal(bot: Child) {
+fn test_set_yours_big_diagonal(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles diagonally on a large board",
         bot: bot,
@@ -376,21 +383,21 @@ fn test_set_yours_big_diagonal(bot: Child) {
             ........X...|\
             .........X..|\
             ..........X.|\
-            ...........X|\n".to_string(),
+            ...........X|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_yours_big_fill(bot: Child) {
+fn test_set_yours_big_fill(bot: Child, c: &str) {
     let mut test = Test::<String, &str> {
         name: "Sets own tiles on every spot on a large board",
         bot: bot,
         board_size: 12,
         sety: vec![],
         seto: vec![],
-        expected_out: "XXXXXXXXXXXX|".repeat(12) + "\n",
+        expected_out: "XXXXXXXXXXXX|".replace("X", c).repeat(12) + "\n",
         real_out: String::new(),
     };
 
@@ -407,21 +414,21 @@ fn test_set_yours_big_fill(bot: Child) {
 // `seto {coord}` sets the other player's tile at coordinate {coord}. Use O to represent the other
 // player
 
-fn test_set_others_a1(bot: Child) {
+fn test_set_others_a1(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tile on a1",
         bot: bot,
         board_size: 3,
         sety: vec![],
         seto: vec!["a1"],
-        expected_out: "O..|...|...|\n".to_string(),
+        expected_out: "O..|...|...|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_c8(bot: Child) {
+fn test_set_others_c8(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tile on c8",
         bot: bot,
@@ -438,70 +445,70 @@ fn test_set_others_c8(bot: Child) {
             ..........|\
             ..........|\
             ..........|\
-            ..........|\n".to_string(),
+            ..........|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_all_rows(bot: Child) {
+fn test_set_others_all_rows(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles on first column",
         bot: bot,
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "b1", "c1"],
-        expected_out: "O..|O..|O..|\n".to_string(),
+        expected_out: "O..|O..|O..|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_fill(bot: Child) {
+fn test_set_others_fill(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles on every spot",
         bot: bot,
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
-        expected_out: "OOO|OOO|OOO|\n".to_string(),
+        expected_out: "OOO|OOO|OOO|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_diagonal(bot: Child) {
+fn test_set_others_diagonal(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles diagonally",
         bot: bot,
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "b2", "c3"],
-        expected_out: "O..|.O.|..O|\n".to_string(),
+        expected_out: "O..|.O.|..O|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_twice_on_same_spot(bot: Child) {
+fn test_set_others_twice_on_same_spot(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own twice on same spot",
         bot: bot,
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "a1", "c3"],
-        expected_out: "O..|...|..O|\n".to_string(),
+        expected_out: "O..|...|..O|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_big_diagonal(bot: Child) {
+fn test_set_others_big_diagonal(bot: Child, c: &str) {
     let test = Test {
         name: "Sets own tiles diagonally on a large board",
         bot: bot,
@@ -520,21 +527,21 @@ fn test_set_others_big_diagonal(bot: Child) {
             ........O...|\
             .........O..|\
             ..........O.|\
-            ...........O|\n".to_string(),
+            ...........O|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
 
     test.run("show_board")
 }
 
-fn test_set_others_big_fill(bot: Child) {
+fn test_set_others_big_fill(bot: Child, c: &str) {
     let mut test = Test::<String, &str> {
         name: "Sets own tiles on every spot on a large board",
         bot: bot,
         board_size: 12,
         sety: vec![],
         seto: vec![],
-        expected_out: "OOOOOOOOOOOO|".repeat(12) + "\n",
+        expected_out: "OOOOOOOOOOOO|".replace("O", c).repeat(12) + "\n",
         real_out: String::new(),
     };
 

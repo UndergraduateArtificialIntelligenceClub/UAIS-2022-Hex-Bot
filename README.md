@@ -45,6 +45,7 @@ only. For example `next` and `n` map to the same command
 | --- | ------ |
 | `help` | Prints a helpful ;) message |
 | `next` | Messages and receives a move from the next bot |
+| `run {}` | Plays the next `{}` turns sequentially, where `{}` is an integer |
 | `show` | Shows the central board |
 | `showall` | Shows the internal board of each bot and the central board |
 | `check` | Checks if a bot has won |

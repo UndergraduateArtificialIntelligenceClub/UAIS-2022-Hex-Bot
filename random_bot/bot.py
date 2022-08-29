@@ -83,8 +83,8 @@ class RandomHexBot:
         """
         tile_chars = {
             EMPTY: ".",
-            self.color: "X",
-            self.opp: "O",
+            BLACK: "B",
+            WHITE: "W",
         }
 
         chars = list(map(lambda x: tile_chars[x], self.board))

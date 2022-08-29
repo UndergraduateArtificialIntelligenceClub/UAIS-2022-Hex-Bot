@@ -44,8 +44,8 @@ impl Board {
             .filter(|&c| c != '|')
             .map(|c| {
                 match c {
-                    'X' => Tile::Black,
-                    'O' => Tile::White,
+                    'B' => Tile::Black,
+                    'W' => Tile::White,
                     '.' => Tile::Empty,
                     _ => panic!("Incorrect bot output character`{}`", c),
                 }
@@ -120,7 +120,7 @@ impl Board {
     // Converts a move (ex: "a1") to the board's index
     fn move_to_index(&self, mv: &str) -> usize {
         let r = mv.chars().nth(0).unwrap() as usize - 97;  // First letter
-        let c = &mv[1..].parse::<usize>().unwrap() - 1;    // All following digits
+        let c = mv[1..].parse::<usize>().unwrap() - 1;    // All following digits
 
         self.coord_to_index(r, c)
     }
@@ -277,9 +277,7 @@ mod board_testing {
         board.set(3,2, Tile::White);
         board.set(1,2, Tile::White);
 
-        let expected = "B . . . \n . B W . \n  . . B . \n   W . W B \n\
-            ---------------\n\
-            Black: B, White: W";
+        let expected = "B . . . \n . B W . \n  . . B . \n   W . W B \n------------------";
 
         assert_eq!(format!("{}", board), expected);
 
@@ -287,9 +285,7 @@ mod board_testing {
         board.set(0,2, Tile::Black);
         board.set(0,3, Tile::Black);
 
-        let expected2 = "B B B B \n . B W . \n  . . B . \n   W . W B \n\
-            ---------------\n\
-            Black: B, White: W";
+        let expected2 ="B B B B \n . B W . \n  . . B . \n   W . W B \n------------------";
 
         assert_eq!(format!("{}", board), expected2);
     }
