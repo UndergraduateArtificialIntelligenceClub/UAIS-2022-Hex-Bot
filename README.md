@@ -1,5 +1,5 @@
 # UAIS Fall 2022 Hex Bot Tournament
-**This document is not finalized and subject to change at any time**
+**This document is close finalized and subject to change at any time**
 
 The UAIS is planning to host a hex bot tournament. We're planning a series of
 workshops to get your team ready to win. Dates are broadly undecided and will be
@@ -15,6 +15,15 @@ name of your program as an argument.
 
 The Bot infrastructure is 🚀<u>**blazing fast**</u>⚡, since it's been written
 in fearlessly concurrent and zero-cost abstracted ✨Rust✨.
+
+Board size and turn limits will depend on the number of contestants interested,
+and the computing power IST is willing to lend us. We're aiming to use 11x11
+boards, since [this data set](http://hex.kosmanor.com/hex-bin/board/10/en_US:0/)
+has a lot of training examples for 11x11. We're aiming for 5 games per bot,
+possibly with 2 minute turns
+
+If there's enough interest, we'd also like to do a smaller board bracket, say
+7x7. This bracket may be of better interest to search algorithms and newcomers
 
 # Hex the board game
 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)) is a classic board game
