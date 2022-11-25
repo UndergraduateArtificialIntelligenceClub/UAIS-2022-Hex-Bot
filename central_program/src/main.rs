@@ -118,7 +118,6 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
             println!("{}", "=".repeat(20));
         } else if "exit" == line || "quit" == line {
             println!("Shutting down");
-            todo!();
             process::exit(0);
         } else if "next" == line || "n" == line {
             play_turn(is_black_turn, &mut board, &mut black, &mut white);
@@ -127,15 +126,15 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
             for _ in 0..line[4..].parse::<usize>().unwrap() {
                 play_turn(is_black_turn, &mut board, &mut black, &mut white);
 
-                if board.has_win() && is_black_turn {
+                if board.has_win() == Tile::Empty {
+                    is_black_turn = !is_black_turn;
+                } else if board.has_win() == Tile::Black {
                     println!("Black has won");
                     break;
-                } else if board.has_win() {
+                } else {
                     println!("White has won");
                     break;
                 }
-
-                is_black_turn = !is_black_turn;
             }
         } else {
             println!("Command `{}` not found. See \"help\" for a list of commands", line);
@@ -193,7 +192,6 @@ fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &
         board.set_move(mv, this_turn_color);
         send_message(next_turn_bot, &format!("seto {}\n", mv));
     } else {
-        println!("Black bot returned invalid move `{}`!", mv);
-        todo!();
+        panic!("Black bot returned invalid move `{}`!", mv);
     }
 }
