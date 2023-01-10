@@ -1,6 +1,4 @@
 # UAIS Fall 2022 Hex Bot Tournament
-**This document is close finalized and subject to change at any time**
-
 The UAIS is planning to host a hex bot tournament. We're planning a series of
 workshops to get your team ready to win. Dates are broadly undecided and will be
 announced sometime mid October. The tournament itself will likely take place at

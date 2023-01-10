@@ -5,6 +5,17 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "central_controller"
+path = "src/central_controller.rs"
+
+[[bin]]
+name = "display_interface"
+path = "src/display_interface.rs"
+
 [dependencies]
 clap = { version = "3", features = ["derive"] }
+regex = "1.7"
 termion = "1.5"
+tui = "0.19"
+unicode-width = "0.1"
