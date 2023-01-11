@@ -1,6 +1,4 @@
-// This program is written with unix in mind. No clue what'll happen on windows...
 mod board;
-
 
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEvent, KeyCode, KeyModifiers},
@@ -9,7 +7,7 @@ use crossterm::{
 };
 
 use tui::{
-    backend::{Backend, TermionBackend},
+    backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Corner, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
@@ -24,6 +22,20 @@ use std::path::PathBuf;
 
 type Try<T> = Result<T, Box<dyn std::error::Error>>;
 
+const BG_BLACK: Style = Style {
+    fg: None,
+    bg: Some(Color::Blue),
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
+const BG_WHITE: Style = Style {
+    fg: None,
+    bg: Some(Color::Green),
+    add_modifier: Modifier::empty(),
+    sub_modifier: Modifier::empty(),
+};
+
 fn main() -> Try<()> {
     let mut stdout = io::stdout();
     execute!(stdout, EnableMouseCapture, EnterAlternateScreen)?;
@@ -32,7 +44,7 @@ fn main() -> Try<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new();
+    let mut app = App::new(Tile::White);
     app.run(&mut terminal)?;
 
     // Cooking ====
@@ -45,6 +57,7 @@ fn main() -> Try<()> {
 #[derive(Debug)]
 struct App {
     board: Board,
+    size: usize,
     status_msg: String,
     color: Tile,
 }
@@ -53,37 +66,107 @@ impl App {
     pub fn new(color: Tile) -> Self {
         Self {
             board: Board::new(6),
+            size: 6,
             status_msg: "Starting game...".to_string(),
             color,
         }
     }
 
-    async fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Try<()> {
+    fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Try<()> {
         let re_init = Regex::new(r"init_board (\d+)").unwrap();
         let re_make_move = Regex::new(r"make_move").unwrap();
         let re_seto = Regex::new(r"seto ([a-z]\d)").unwrap();
         let re_sety = Regex::new(r"sety ([a-z]\d)").unwrap();
         let re_unset = Regex::new(r"unset ([a-z]\d)").unwrap();
         let re_quit = Regex::new(r"quit").unwrap();
-        let stdin = io::stdin();
 
-        for line in stdin.lock().lines() {
+        let stdin = io::stdin();
+        let mut lines = stdin.lock().lines().map(|s| s.expect("Failed to read line from stdin"));
+
+
+        terminal.draw(|f| self.tui(f))?;
+
+        for ref line in lines {
             if re_init.is_match(line) {
                 let caps = re_init.captures(line).unwrap();
-                let size: u8 = caps.get(1).unwrap().parse()?;
-                self.board = Board::new(size);
-                self.status_msg = format!("Created new board of size {size}x{size}");
+                self.size = caps.get(1).unwrap().as_str().parse()?;
+                self.board = Board::new(self.size as u8);
+                self.status_msg = format!("Created new board of size {s}x{s}", s = self.size);
             } else if re_make_move.is_match(line) {
+                let mut stdout = io::stdout().lock();
+                let reply = self.get_next_click().expect("Failed to get crossterm event");
+                writeln!(&mut stdout, "{reply}")?;
             } else if re_seto.is_match(line) {
+                todo!();
             } else if re_sety.is_match(line) {
+                todo!();
             } else if re_unset.is_match(line) {
+                todo!();
             } else if re_quit.is_match(line) {
+                return Ok(());
             } else {
-                panic!("Unrecognized command from central: `{line}`")
+                panic!("Unrecognized command from central: `{line}`");
             }
+
+            terminal.draw(|f| self.tui(f))?;
         }
 
         Ok(())
     }
-}
 
+    fn get_next_click(&mut self) -> Try<String> {
+        loop {
+            if let Event::Mouse(mouse) = crossterm::event::read()? {
+                let row = ((mouse.row as usize - 3 - 1) / 2) + 1;
+                let col = ((mouse.column as usize - row + 1 - 3 - 1) / 2) + 1;
+
+                if row <= self.size && col <= self.size {
+                    let c = char::from_u32((row + 97) as u32).unwrap();
+                    return Ok(format!("{}{}", c, col));
+                }
+            }
+        }
+    }
+
+    fn tui<B: Backend>(&mut self, f: &mut Frame<B>) {
+        let mut outer = Layout::default()
+            .direction(Direction::Horizontal)
+            .margin(1)
+            .horizontal_margin(2)
+            .constraints([
+                Constraint::Length((self.size * 6 - 1) as u16),
+                Constraint::Min(1),
+            ].as_ref())
+            .split(f.size());
+
+        outer[1].x += 3 * self.size as u16;
+        outer[1].width -= 3 * self.size as u16;
+
+        let board_rows = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Constraint::Length(3); self.size + 1].as_ref())
+            .split(outer[0]);
+
+        let tile_block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded);
+
+        for i in 0..self.size {
+            let cols = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(vec![Constraint::Length(5); self.size + 1].as_ref())
+                .split(board_rows[i]);
+
+            for mut col in cols {
+                let bg = Span::styled("   ", BG_WHITE);
+
+                col.x += 3 * i as u16;
+                //col.y -= i as u16;
+
+                f.render_widget(Paragraph::new(bg).block(tile_block.clone()), col);
+            }
+        }
+
+        f.render_widget(Paragraph::new(self.status_msg.clone()).block(tile_block), outer[1]);
+    }
+}

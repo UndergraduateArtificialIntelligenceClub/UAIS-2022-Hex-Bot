@@ -15,6 +15,7 @@ path = "src/display_interface.rs"
 
 [dependencies]
 clap = { version = "3", features = ["derive"] }
+crossterm = "0.25"
 regex = "1.7"
 termion = "1.5"
 tui = "0.19"
