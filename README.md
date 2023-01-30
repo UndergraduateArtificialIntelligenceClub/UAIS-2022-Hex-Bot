@@ -19,9 +19,7 @@ and the computing power IST is willing to lend us. We are going to use 10x10 boa
 for the tournament. If you wish to use supervised learning, existing games can be found
 [here](https://github.com/UndergraduateArtificialIntelligenceClub/UAIS-2022-Hex-Bot/blob/main/training_data/game_data.txt).
 Note that this file will be updated regularly with more games as they become available.
-boards, since [this data set](http://hex.kosmanor.com/hex-bin/board/10/en_US:0/)
-has a lot of training examples for 10x10. We're aiming for 5 games per bot,
-possibly with 2 minute turns
+We're aiming for 5 games per bot, possibly with 2 minute turns
 
 If there's enough interest, we'd also like to do a smaller board bracket, say
 7x7. This bracket may be of better interest to search algorithms and newcomers
