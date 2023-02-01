@@ -1,7 +1,7 @@
 # game_data.txt
 
 `game_data.txt` contains self-play games on a 10x10 board using the (Wolve)[https://trmph.com/hexwiki/Wolve.html] program.
-There are ~2500 games in the database, with more to come. Each game has several dozen moves each, providing thousands of board positions for you to train on.
+There are 9900. Each game has several dozen moves each, providing thousands of board positions for you to train on.
 
 ## IMPORTANT
 The first black & white move for each game was auto generated to ensure that the game playouts were sufficiently different.
