@@ -40,6 +40,8 @@ to 26x26 sized boards. All boards will be square
     <img width="400" alt="Alacritty Logo" src="https://raw.githubusercontent.com/UndergraduateArtificialIntelligenceClub/UAIS-2022-Hex-Bot/main/hex_grid_example.jpg">
 </p>
 
+On its own, Hex is heavily biased towards the player who moves first. To rectify this, all players have the option of implementing the "swap" rule, explained [here](https://en.wikipedia.org/wiki/Pie_rule).
+
 # Central program
 This program will start up both bots, send and receive communication and
 validate moves. Provide a full path to both executables as the argument
