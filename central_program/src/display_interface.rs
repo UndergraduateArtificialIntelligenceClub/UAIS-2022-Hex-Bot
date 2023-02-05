@@ -68,7 +68,7 @@ impl App {
 
         Self {
             board: Board::new(default_size),
-            size: default_size,
+            size: default_size as usize,
             messages: vec!["Starting game...".to_string(), "Starting game...".to_string()],
             color,
         }
