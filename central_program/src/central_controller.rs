@@ -124,10 +124,16 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
             is_black_turn = !is_black_turn;
         } else if line.len() >= 5 && "run " == &line[..4] && line[4..].parse::<usize>().is_ok() {
             for _ in 0..line[4..].parse::<usize>().unwrap() {
-                play_turn(is_black_turn, &mut board, &mut black, &mut white);
+                let mv = play_turn(is_black_turn, &mut board, &mut black, &mut white);
 
                 if board.has_win() == Tile::Empty {
-                    is_black_turn = !is_black_turn;
+                    if mv != String::from("swap") {
+                        is_black_turn = !is_black_turn;
+                    } else {
+                        let tmp = black;
+                        black = white;
+                        white = tmp;
+                    }
                 } else if board.has_win() == Tile::Black {
                     println!("Black has won");
                     break;
@@ -177,7 +183,7 @@ fn print_bot_board(bot: &mut Child, color: Tile) {
     println!("{} board ------------------\n{}", color, Board::from(&response));
 }
 
-fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &mut Child) {
+fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &mut Child) -> String {
     let (this_turn_bot, next_turn_bot, this_turn_color) = if is_black_turn {
         (black, white, Tile::Black)
     } else {
@@ -189,9 +195,15 @@ fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &
 
     if board.is_valid_move(&mv) {
         println!("{}'s move: {}", this_turn_color, mv);
-        board.set_move(mv, this_turn_color);
-        send_message(next_turn_bot, &format!("seto {}\n", mv));
+        board.set_move(&mv, this_turn_color);
+        if mv.eq("swap") {
+            send_message(next_turn_bot, "swap");
+        } else {
+            send_message(next_turn_bot, &format!("seto {}\n", mv));
+        }
     } else {
         panic!("Black bot returned invalid move `{}`!", mv);
     }
+
+    String::from(mv)
 }
