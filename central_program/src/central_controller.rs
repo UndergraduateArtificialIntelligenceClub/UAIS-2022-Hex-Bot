@@ -207,3 +207,4 @@ fn play_turn(is_black_turn: bool, board: &mut Board, black: &mut Child, white: &
 
     String::from(mv)
 }
+
