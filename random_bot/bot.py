@@ -99,6 +99,7 @@ class RandomHexBot:
     def make_move(self):
         """Generates the move. For this bot, the move is randomly selected from all empty positions."""
         if self.move_count == 1:
+            self.swap()
             print("swap")
             self.move_count += 1
             return
