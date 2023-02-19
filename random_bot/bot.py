@@ -290,3 +290,4 @@ class RandomHexBot:
         column = int(move[1:]) - 1
         row = ord(move[0]) - ord("a")
         return row * self.board_size + column
+       
