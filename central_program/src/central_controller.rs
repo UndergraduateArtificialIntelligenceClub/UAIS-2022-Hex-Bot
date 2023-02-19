@@ -122,13 +122,20 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
         } else if "next" == line || "n" == line {
             let mv = play_turn(is_black_turn, &mut board, &mut black, &mut white);
 
-            // Make sure 'swap' is handled correctly
-            if mv != String::from("swap") {
-                is_black_turn = !is_black_turn;
+            if board.has_win() == Tile::Empty {
+                if mv != String::from("swap") {
+                    is_black_turn = !is_black_turn;
+                } else {
+                    let tmp = black;
+                    black = white;
+                    white = tmp;
+                }
+            } else if board.has_win() == Tile::Black {
+                println!("Black has won");
+                break;
             } else {
-                let tmp = black;
-                black = white;
-                white = tmp;
+                println!("White has won");
+                break;
             }
         } else if line.len() >= 5 && "run " == &line[..4] && line[4..].parse::<usize>().is_ok() {
             for _ in 0..line[4..].parse::<usize>().unwrap() {
