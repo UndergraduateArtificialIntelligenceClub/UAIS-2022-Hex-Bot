@@ -70,13 +70,16 @@ impl Board {
     }
 
     pub fn set_move(&mut self, mv: &str, color: Tile) {
+        if mv.eq("swap") {
+            return;
+        }
         let index = self.move_to_index(mv);
         self.board[index] = color
     }
 
     // Returns true when the specified tile is empty
     pub fn is_valid_move(&self, mv: &str) -> bool {
-        self.board[self.move_to_index(mv)] == Tile::Empty
+        mv.eq("swap") || self.board[self.move_to_index(mv)] == Tile::Empty
     }
 
     // Returns the color of the player who won, empty otherwise
