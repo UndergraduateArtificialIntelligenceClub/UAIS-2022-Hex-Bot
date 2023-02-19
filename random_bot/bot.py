@@ -17,6 +17,7 @@ class RandomHexBot:
             "init_board": self.init_board,
             "show_board": self.show_board,
             "make_move": self.make_move,
+            "swap": self.swap,
             "seto": self.seto,
             "sety": self.sety,
             "unset": self.unset,
@@ -97,6 +98,11 @@ class RandomHexBot:
 
     def make_move(self):
         """Generates the move. For this bot, the move is randomly selected from all empty positions."""
+        if self.move_count == 1:
+            print("swap")
+            self.move_count += 1
+            return
+
         empties = []
         for i, cell in enumerate(self.board):
             if cell == EMPTY:
@@ -107,13 +113,19 @@ class RandomHexBot:
         print(move)
         return
 
+    def swap(self):
+        """
+        Performs the 'swap' move
+        """
+        self.opp, self.color = self.color, self.opp
+        self.move_count += 1
+
     def seto(self, move):
         """Tells the bot about a move for the other bot
 
         Args:
             move (str): A human-readable position on which the opponent has just played
         """
-        # TODO: Handle swap move. Logic moved to move_to_coord()
         coord = self.move_to_coord(move)
         if self.board[coord] == EMPTY:
             # TODO: Warn or not?
