@@ -64,6 +64,12 @@ impl BotTest {
         test_white_win_small(self.get_bot(), self.is_white());
         test_black_win_small(self.get_bot(), self.is_white());
         test_black_win_big(self.get_bot(), self.is_white());
+
+        println!("Checking 'swap' functionality ==========================================");
+        println!("`swap` swaps the order of the players, without changing the board itself");
+        test_swap_move_first(self.get_bot(), self.is_white());
+        test_swap_move_second(self.get_bot(), self.is_white());
+        
     }
 
     // Starts up a new bot
@@ -167,6 +173,7 @@ where
     pub board_size: u8,
     pub sety: Vec<T>,
     pub seto: Vec<T>,
+    pub swap: i32,
     pub expected_out: String,
     pub real_out: String,
 }
@@ -193,8 +200,30 @@ where
 
         write!(bot_in, "init_board {}\n", self.board_size).expect("Failed to write init_board");
 
-        for coord in self.sety.iter() { write!(bot_in, "sety {}\n", coord).expect("Failed to write sety") }
-        for coord in self.seto.iter() { write!(bot_in, "seto {}\n", coord).expect("Failed to write seto") }
+        let mut moves: Vec<String> = Vec::new();
+        let mut yi = 0;
+        let mut oi = 0;
+
+        // Interleave sety & seto moves to mimic game
+        while yi < self.sety.len() || oi < self.seto.len() {
+            if yi < self.sety.len() {
+                moves.push(format!("sety {}", self.sety[yi]));
+                yi += 1;
+            }
+            if oi < self.seto.len() {
+                moves.push(format!("seto {}", self.seto[oi]));
+                oi += 1;
+            }
+        }
+
+        // Insert a swap move if required
+        if (self.swap >= 0) {
+            moves.insert(self.swap as usize, String::from("swap"));
+        }
+        
+        for mv in moves.iter() {
+            write!(bot_in, "{}\n", mv).expect(&format!("Failed to write move {}", mv.as_str()));
+        }
     }
 
     // Check output
@@ -202,10 +231,10 @@ where
         let bot_out = self.bot.stdout.as_mut().unwrap();
         let bot_in = self.bot.stdin.as_mut().unwrap();
         write!(bot_in, "{}\n", cmd).expect(&format!("Failed to write: {}", cmd));
-
+        
         let mut reader = BufReader::new(bot_out);
         let mut output = String::new();
-
+        
         reader.read_line(&mut output).unwrap();
         output.replace("\r\n", "\n").to_owned()  // DOS compatibility
     }
@@ -246,6 +275,7 @@ fn test_init_board(bot: Child, size: u8) {
         board_size: size,
         sety: vec![],
         seto: vec![],
+        swap: -1,
         expected_out: String::new(), //"...|...|...|\n".to_string(),
         real_out: String::new(),
     };
@@ -277,6 +307,7 @@ fn test_set_yours_a1(bot: Child, c: &str) {
         board_size: 3,
         sety: vec!["a1"],
         seto: vec![],
+        swap: -1,
         expected_out: "X..|...|...|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
@@ -291,6 +322,7 @@ fn test_set_yours_c8(bot: Child, c: &str) {
         board_size: 10,
         sety: vec!["c8"],
         seto: vec![],
+        swap: -1,
         expected_out: "\
             ..........|\
             ..........|\
@@ -315,6 +347,7 @@ fn test_set_yours_all_rows(bot: Child, c: &str) {
         board_size: 3,
         sety: vec!["a1", "b1", "c1"],
         seto: vec![],
+        swap: -1,
         expected_out: "X..|X..|X..|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
@@ -329,6 +362,7 @@ fn test_set_yours_fill(bot: Child, c: &str) {
         board_size: 3,
         sety: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
         seto: vec![],
+        swap: -1,
         expected_out: "XXX|XXX|XXX|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
@@ -343,6 +377,7 @@ fn test_set_yours_diagonal(bot: Child, c: &str) {
         board_size: 3,
         sety: vec!["a1", "b2", "c3"],
         seto: vec![],
+        swap: -1,
         expected_out: "X..|.X.|..X|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
@@ -357,6 +392,7 @@ fn test_set_yours_twice_on_same_spot(bot: Child, c: &str) {
         board_size: 3,
         sety: vec!["a1", "a1", "c3"],
         seto: vec![],
+        swap: -1,
         expected_out: "X..|...|..X|\n".replace("X", c).to_string(),
         real_out: String::new(),
     };
@@ -371,6 +407,7 @@ fn test_set_yours_big_diagonal(bot: Child, c: &str) {
         board_size: 12,
         sety: vec!["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"],
         seto: vec![],
+        swap: -1,
         expected_out: "\
             X...........|\
             .X..........|\
@@ -397,6 +434,7 @@ fn test_set_yours_big_fill(bot: Child, c: &str) {
         board_size: 12,
         sety: vec![],
         seto: vec![],
+        swap: -1,
         expected_out: "XXXXXXXXXXXX|".replace("X", c).repeat(12) + "\n",
         real_out: String::new(),
     };
@@ -421,6 +459,7 @@ fn test_set_others_a1(bot: Child, c: &str) {
         board_size: 3,
         sety: vec![],
         seto: vec!["a1"],
+        swap: -1,
         expected_out: "O..|...|...|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
@@ -435,6 +474,7 @@ fn test_set_others_c8(bot: Child, c: &str) {
         board_size: 10,
         sety: vec![],
         seto: vec!["c8"],
+        swap: -1,
         expected_out: "\
             ..........|\
             ..........|\
@@ -459,6 +499,7 @@ fn test_set_others_all_rows(bot: Child, c: &str) {
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "b1", "c1"],
+        swap: -1,
         expected_out: "O..|O..|O..|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
@@ -473,6 +514,7 @@ fn test_set_others_fill(bot: Child, c: &str) {
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"],
+        swap: -1,
         expected_out: "OOO|OOO|OOO|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
@@ -487,6 +529,7 @@ fn test_set_others_diagonal(bot: Child, c: &str) {
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "b2", "c3"],
+        swap: -1,
         expected_out: "O..|.O.|..O|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
@@ -501,6 +544,7 @@ fn test_set_others_twice_on_same_spot(bot: Child, c: &str) {
         board_size: 3,
         sety: vec![],
         seto: vec!["a1", "a1", "c3"],
+        swap: -1,
         expected_out: "O..|...|..O|\n".replace("O", c).to_string(),
         real_out: String::new(),
     };
@@ -515,6 +559,7 @@ fn test_set_others_big_diagonal(bot: Child, c: &str) {
         board_size: 12,
         sety: vec![],
         seto: vec!["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10", "k11", "l12"],
+        swap: -1,
         expected_out: "\
             O...........|\
             .O..........|\
@@ -541,6 +586,7 @@ fn test_set_others_big_fill(bot: Child, c: &str) {
         board_size: 12,
         sety: vec![],
         seto: vec![],
+        swap: -1,
         expected_out: "OOOOOOOOOOOO|".replace("O", c).repeat(12) + "\n",
         real_out: String::new(),
     };
@@ -568,6 +614,7 @@ fn test_no_win_blank(bot: Child, size: u8) {
         board_size: size,
         sety: vec![],
         seto: vec![],
+        swap: -1,
         expected_out: "0\n".to_string(),
         real_out: String::new(),
     };
@@ -582,6 +629,7 @@ fn test_white_win_small(bot: Child, is_white: bool) {
         board_size: 3,
         sety: vec!["a1", "a2", "a3"],
         seto: vec![],
+        swap: -1,
         expected_out: format!("{}\n", if is_white { 1 } else { -1 }),
         real_out: String::new(),
     };
@@ -598,6 +646,7 @@ fn test_black_win_small(bot: Child, is_white: bool) {
         board_size: 3,
         sety: vec!["a1", "b1", "c1"],
         seto: vec![],
+        swap: -1,
         expected_out: format!("{}\n", if !is_white { 1 } else { -1 }),
         real_out: String::new(),
     };
@@ -615,6 +664,7 @@ fn test_black_win_big(bot: Child, is_white: bool) {
         sety: vec!["a3", "b3", "c3", "c4", "b5", "b6", "b7", "b8", "b9", "b10", "b11", "c11",
             "d11", "e11", "f10", "g9", "h9", "i8", "j8", "j9", "j10", "j11", "k11"],
         seto: vec![],
+        swap: -1,
         expected_out: format!("{}\n", if !is_white { 1 } else { -1 }),
         real_out: String::new(),
     };
@@ -622,6 +672,64 @@ fn test_black_win_big(bot: Child, is_white: bool) {
     if is_white { std::mem::swap(&mut test.sety, &mut test.seto) }
 
     test.run("check_win");
+}
+
+fn test_swap_move_first(bot: Child, is_white: bool) {
+    let white = "W";
+    let black = "B";
+    let mut test = Test {
+        name: "Tests swap move sety",
+        bot: bot,
+        board_size: 10,
+        sety: vec!["i2", "a3"],
+        seto: vec![],
+        swap: 1,
+        expected_out: "\
+            ..O.......|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            ..........|\
+            .C........|\
+            ..........|\n".replace("O", white).replace("C", black).to_string(),
+        real_out: String::new(),
+    };
+
+    if is_white { std::mem::swap(&mut test.sety, &mut test.seto) };
+
+    test.run("show_board");
+}
+
+fn test_swap_move_second(bot: Child, is_white: bool) {
+    let white = "W";
+    let black = "B";
+    let mut test = Test {
+        name: "Tests swap move seto",
+        bot: bot,
+        board_size: 10,
+        sety: vec![],
+        seto: vec!["i2", "a3"],
+        swap: 1,
+        expected_out: "\
+        ..O.......|\
+        ..........|\
+        ..........|\
+        ..........|\
+        ..........|\
+        ..........|\
+        ..........|\
+        ..........|\
+        .C........|\
+        ..........|\n".replace("O", black).replace("C", white).to_string(),
+        real_out: String::new(),
+    };
+
+    if is_white { std::mem::swap(&mut test.sety, &mut test.seto) };
+
+    test.run("show_board");
 }
 
 // TODO: Test "swap" command
