@@ -120,8 +120,16 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
             println!("Shutting down");
             process::exit(0);
         } else if "next" == line || "n" == line {
-            play_turn(is_black_turn, &mut board, &mut black, &mut white);
-            is_black_turn = !is_black_turn;
+            let mv = play_turn(is_black_turn, &mut board, &mut black, &mut white);
+
+            // Make sure 'swap' is handled correctly
+            if mv != String::from("swap") {
+                is_black_turn = !is_black_turn;
+            } else {
+                let tmp = black;
+                black = white;
+                white = tmp;
+            }
         } else if line.len() >= 5 && "run " == &line[..4] && line[4..].parse::<usize>().is_ok() {
             for _ in 0..line[4..].parse::<usize>().unwrap() {
                 let mv = play_turn(is_black_turn, &mut board, &mut black, &mut white);
@@ -147,6 +155,8 @@ fn run_match(size: u8, mut black: Child, mut white: Child) {
         }
     }
 }
+
+
 
 fn spawn_bot(bot_path: PathBuf, color: &str) -> Child {
         Command::new(bot_path)
